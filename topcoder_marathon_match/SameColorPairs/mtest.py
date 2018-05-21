@@ -162,12 +162,12 @@ class Test:
                     self.result_draw_line(i, start_index, draw_index)
                     draw_index += 1
     
-    def add_next_testqueue(self, alive_q):
+    def add_next_testqueue(self, q):
         if len(self.testqueue_indexs) > 0:
             i = self.testqueue_indexs.popleft()
             t = TopCoderTesterQueue(i, self.cmdpath, self.op)
             t.start()
-            alive_q += [t]
+            q += [t]
     
     def init_testqueue_indexs(self, start_index, testcnt):
         self.testqueue_indexs = deque()
