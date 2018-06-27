@@ -16,3 +16,8 @@ mtest.pyの設定
 コンパイルオプション  
 ## test.bat
 cmd /k mtest.py
+
+## mtest.py
+mtest.py 開始位置 件数  
+たまにエラーで中断されることがあるtesterの出力がうまく処理出来てないっぽい  
+
