@@ -21,12 +21,16 @@ class Option:
         self.getch = None
         self.maxthread = 1
         self.compare = 'greater'
+        self.errtag = 'no'
+        self.os = 'win'
         sp = ';'
         if len(sys.argv) > 1 : self.op = sys.argv[1].replace('\\', '/')
         if 'win' in sys.platform and 'darwin' != sys.platform:
             self.cls = 'cls'
+            self.os = 'win'
             # self.getch = self.getch_win
         else:
+            self.os = 'unix'
             self.cls = 'clear'
             # self.getch = self.getch_unix
             sp = ':'
@@ -57,6 +61,8 @@ class Option:
                             self.maxthread = int(s)
                         if mode == '[compare]':
                             self.compare = s
+                        if mode == '[errtag]':
+                            self.errtag = s
     # def getch_unix(self):
     #     import sys, tty, termios
     #     fd = sys.stdin.fileno()
@@ -99,23 +105,49 @@ class TopCoderTesterQueue(threading.Thread):
         self.jarpath = op.crdir + 'tester.jar'
         self.result = ()
         self.op = op
-        
         threading.Thread.__init__(self)
     def run(self):
-        cmd = 'java -jar ' + self.jarpath + ' -exec ' + self.cmdpath + ' -seed ' + str(self.n) + ' -novis'
-        p = Popen(cmd.split(), stdout=PIPE, stdin=PIPE, stderr=PIPE)
+        cmd = []
+        # cmd ;= ['java -jar ' + self.jarpath]
+        cmd += ['java -Xmx1024m -jar ' + self.jarpath]
+        cmd += ['-exec ' + '\"' + self.cmdpath + '\"']
+        cmd += ['-seed ' + str(self.n)]
+        cmd += ['-novis']
+        # cmd += ['-vis']
+        # cmd += ['-save ./image/' + str(self.n) + '.png']
+        
+        cmd = ' '.join(cmd)
+        p = Popen(cmd, stdout=PIPE, shell=True)
+        
         outerr = p.communicate(timeout=self.op.timeout)
         out = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
-        err = outerr[1].decode('utf-8').replace('\r\n', '\n').strip()
-        # print('----')
-        # print('out', out)
-        # print('err', err)
+        #err = outerr[1].decode('utf-8').replace('\r\n', '\n').strip()
         
-        sp = 'Score = '
+        cerr_s, cerr_e = '<cerr>', '</cerr>'
+        sp, spsub = 'Score = ', 'Score: '
+        
+        if sp not in out and spsub in out : sp = spsub
         if sp in out:
-            self.result = (self.n, decimal.Decimal(out.split(sp)[1]), out.split(sp)[0])
+            score = ''
+            for i in out.split(sp)[1]:
+                try:
+                    decimal.Decimal(score + i)
+                    score += i
+                except:
+                    break
+            cerr = out.replace(sp + score, '')
+            if self.op.errtag == 'yes':
+                err = ''
+                if cerr_s in cerr:
+                    t = []
+                    for i in cerr.split(cerr_s)[1:]:
+                        if i.strip() : t += [i.split(cerr_e)[0]]
+                    err = ':'.join(t)
+            else:
+                err = cerr
+            self.result = (self.n, decimal.Decimal(score), err)
         else:
-            self.result = (self.n, decimal.Decimal(0), '')
+            self.result = (self.n, decimal.Decimal(-1), '')
 
 class Test:
     def __init__(self, start_index, testcnt, op):
@@ -125,16 +157,24 @@ class Test:
         self.op = op
         self.score_reads(start_index, testcnt)
         self.init_testqueue_indexs(start_index, testcnt)
+        self.gcnt = 0
+        self.ycnt = 0
+        self.p = 0
+        self.pu = 0
+        self.pd = 0
         self.testloop(start_index)
-        self.result_sum_draw()
+        self.result_sum_draw(start_index, testcnt)
         self.result_file_write(start_index, testcnt)
     
-    def result_sum_draw(self):
+    def result_sum_draw(self, start_index, testcnt):
         score = 0
         readscore = 0
         for i, j, k in self.results : score += j
         for i in self.reads : readscore += i
-        print('Sum :', score, readscore)
+        print('//', 'test', start_index, testcnt)
+        print('//', 'Sum :', score, '    PrevSum :', readscore)
+        print('//', 'upcnt :', self.gcnt, '    downcnt :', self.ycnt)
+        print('//', 'all : {:.6f}%'.format(self.p / testcnt - 100), '    up : {:.6f}%'.format(self.pu / testcnt - 100), '    down : {:.6f}%'.format(self.pd / testcnt - 100))
     
     def result_file_write(self, start_index, testcnt):
         with open('result' + str(start_index) + '_' + str(testcnt) + '.txt', 'w') as f:
@@ -193,19 +233,36 @@ class Test:
         green = lambda x : '\033[42;30m' + x + '\033[0m'
         yellow = lambda x : '\033[43;30m' + x + '\033[0m'
         # result (index, score, cerr)
-        index = '{0:4d}'.format(result[0])
-        a = '{:14.6f}'.format(result[1])
-        b = '{:14.6f}'.format(result[1] - self.reads[p])
+        index = '{:4d}'.format(result[0])
+        a = '{:14.4f}'.format(result[1])
+        b = '{:14.4f}'.format(result[1] - self.reads[p])
         t = result[1] - self.reads[p]
         if self.op.compare == 'less':
-            if t < 0 : b = green(b)
-            if t > 0 : b = yellow(b)
+            if t < 0:
+                b = green(b)
+                self.gcnt += 1
+            if t > 0:
+                b = yellow(b)
+                self.ycnt += 1
         else:
-            if t > 0 : b = green(b)
-            if t < 0 : b = yellow(b)
+            if t > 0:
+                b = green(b)
+                self.gcnt += 1
+            if t < 0:
+                b = yellow(b)
+                self.ycnt += 1
         s = ':'.join(result[2].split('\n')) if result[2] else ''
         
-        print(index, ': Score', a, b, ':', s)
+        if self.reads[p]:
+            print(index, ': Score', a, b, ':{:8.4f}%'.format((result[1] / self.reads[p])*100),':', s)
+            self.p += (result[1] / self.reads[p])*100
+            self.pu += (100 if (result[1] / self.reads[p])*100 < 100 else (result[1] / self.reads[p])*100)
+            self.pd += (100 if (result[1] / self.reads[p])*100 > 100 else (result[1] / self.reads[p])*100)
+        else:
+            print(index, ': Score', a, b, ':', s)
+            self.p += 100
+            self.pu += 100
+            self.pd += 100
         
         if 'win' in sys.platform and 'darwin' != sys.platform : os.system('color')
 
