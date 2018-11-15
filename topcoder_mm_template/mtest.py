@@ -130,10 +130,9 @@ class TopCoderTesterQueue(threading.Thread):
         if sp in out:
             score = ''
             for i in out.split(sp)[1]:
-                try:
-                    decimal.Decimal(score + i)
+                if i.isdigit() or (score == '' and i == '-'):
                     score += i
-                except:
+                else:
                     break
             cerr = out.replace(sp + score, '')
             if self.op.errtag == 'yes':
@@ -157,6 +156,7 @@ class Test:
         self.op = op
         self.score_reads(start_index, testcnt)
         self.init_testqueue_indexs(start_index, testcnt)
+        self.ecnt = 0
         self.gcnt = 0
         self.ycnt = 0
         self.p = 0
@@ -169,12 +169,62 @@ class Test:
     def result_sum_draw(self, start_index, testcnt):
         score = 0
         readscore = 0
-        for i, j, k in self.results : score += j
+        for i, j, k in self.results:
+            if j >= 0 : score += j
         for i in self.reads : readscore += i
         print('//', 'test', start_index, testcnt)
         print('//', 'Sum :', score, '    PrevSum :', readscore)
-        print('//', 'upcnt :', self.gcnt, '    downcnt :', self.ycnt)
+        print('//', 'upcnt :', self.gcnt, '    downcnt :', self.ycnt, '    errcnt :', self.ecnt)
         print('//', 'all : {:.6f}%'.format(self.p / testcnt - 100), '    up : {:.6f}%'.format(self.pu / testcnt - 100), '    down : {:.6f}%'.format(self.pd / testcnt - 100))
+        print('---')
+        h = len(self.results)
+        r = p = 0
+        cnt = 0
+        for i in range(h):
+            best = -1
+            if self.op.compare == 'less':
+                best = min(self.results[i][1], self.reads[i])
+                if self.results[i][1] >= 0 and self.reads[i] >= 0:
+                    if self.results[i][1] > 0 and self.reads[i] > 0:
+                        r += (best / self.results[i][1]) * 100
+                        p += (best / self.reads[i]) * 100
+                    elif self.results[i][1] == 0 and self.reads[i] > 0:
+                        r += 100
+                    elif self.results[i][1] > 0 and self.reads[i] == 0:
+                        p += 100
+                    else:
+                        if self.results[i][1] == self.reads[i]:
+                            r += 100
+                            p += 100
+                elif self.results[i][1] < 0 and self.reads[i] >= 0:
+                    p += 100
+                elif self.results[i][1] >= 0 and self.reads[i] < 0:
+                    r += 100
+            else:# greater
+                best = max(self.results[i][1], self.reads[i])
+                if self.results[i][1] >= 0 and self.reads[i] >= 0:
+                    if best > 0:
+                        r += (self.results[i][1] / best) * 100
+                        p += (self.reads[i] / best) * 100
+                    else:
+                        if self.results[i][1] == self.reads[i]:
+                            r += 100
+                            p += 100
+                        elif self.results[i][1] > self.reads[i]:
+                            r += 100
+                        else:
+                            p += 100
+                elif self.results[i][1] < 0 and self.reads[i] >= 0:
+                    p += 100
+                elif self.results[i][1] >= 0 and self.reads[i] < 0:
+                    r += 100
+                
+            cnt += 1
+        bestscore = 100 * h
+        print('// this program : ', str(int((r / bestscore) * 1000000)).rjust(7))
+        print('// read score   : ', str(int((p / bestscore) * 1000000)).rjust(7))
+        
+        
     
     def result_file_write(self, start_index, testcnt):
         with open('result' + str(start_index) + '_' + str(testcnt) + '.txt', 'w') as f:
@@ -232,25 +282,32 @@ class Test:
         if 'win' in sys.platform and 'darwin' != sys.platform : os.system('color')
         green = lambda x : '\033[42;30m' + x + '\033[0m'
         yellow = lambda x : '\033[43;30m' + x + '\033[0m'
+        red = lambda x : '\033[41;30m' + x + '\033[0m'
         # result (index, score, cerr)
         index = '{:4d}'.format(result[0])
         a = '{:14.4f}'.format(result[1])
         b = '{:14.4f}'.format(result[1] - self.reads[p])
+        e = '-{:14.4f}'.format(self.reads[p])
         t = result[1] - self.reads[p]
-        if self.op.compare == 'less':
-            if t < 0:
-                b = green(b)
-                self.gcnt += 1
-            if t > 0:
-                b = yellow(b)
-                self.ycnt += 1
+        if result[1] < 0:
+            b = red(e)
+            self.ecnt += 1
         else:
-            if t > 0:
-                b = green(b)
-                self.gcnt += 1
-            if t < 0:
-                b = yellow(b)
-                self.ycnt += 1
+            if self.op.compare == 'less':
+                if t < 0:
+                    b = green(b)
+                    self.gcnt += 1
+                if t > 0:
+                    b = yellow(b)
+                    self.ycnt += 1
+            else:
+                if t > 0:
+                    b = green(b)
+                    self.gcnt += 1
+                if t < 0:
+                    b = yellow(b)
+                    self.ycnt += 1
+        
         s = ':'.join(result[2].split('\n')) if result[2] else ''
         
         if self.reads[p]:
