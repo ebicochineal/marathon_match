@@ -108,15 +108,17 @@ class TopCoderTesterQueue(threading.Thread):
         threading.Thread.__init__(self)
     def run(self):
         cmd = []
-        # cmd += ['java -jar ' + self.jarpath]
-        cmd += ['java -Xmx1024m -jar ' + self.jarpath]
+        cmd += ['java -jar ' + self.jarpath]
+        # cmd += ['java -Xmx1024m -jar ' + self.jarpath]
         cmd += ['-exec ' + '\"' + self.cmdpath + '\"']
         cmd += ['-seed ' + str(self.n)]
-        cmd += ['-novis']
+        # cmd += ['-novis']
         # cmd += ['-vis']
-        # cmd += ['-save ./images/' + str(self.n) + '.png']
+        cmd += ['-orig ./example-images/' + str(self.n % 10) + '.jpg']
+        cmd += ['-save ./images/' + str(self.n) + '.jpg']
         
         cmd = ' '.join(cmd)
+        
         p = Popen(cmd, stdout=PIPE, shell=True)
         
         outerr = p.communicate(timeout=self.op.timeout)
