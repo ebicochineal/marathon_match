@@ -1,0 +1,1 @@
+cmd /k mtestjava.py 5126 100
