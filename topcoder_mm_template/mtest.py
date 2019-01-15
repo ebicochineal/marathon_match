@@ -84,19 +84,21 @@ class SourceCompile:
     def __init__(self, op):
         cpath = op.crdir + 'compile'
         try_mkdir(cpath)
-        _, self.ext = os.path.splitext(op.source)
+        self.fname, self.ext = os.path.splitext(op.source)
         self.ext = self.ext[1:]
-        self.path = op.crdir + op.source
+        self.cmd = op.crdir + op.source
         if self.ext in op.cmdc:
             exepath = cpath + '/' + 'test.exe'
             print('Compile >>>', op.source)
-            cmd = ' '.join(op.cmdc[self.ext]).replace('[o]', exepath).replace('[i]', op.crdir + op.source)
-            os.system(cmd)
-            self.path = exepath
+            cmd_compile = ' '.join(op.cmdc[self.ext]).replace('[o]', exepath).replace('[i]', op.crdir + op.source).replace('[n]', self.fname).replace('[d]', './compile/')
+            
+            os.system(cmd_compile)
+            self.cmd = exepath
         if self.ext in op.cmdi:
-            self.path = ' '.join(op.cmdi[self.ext]).replace('[i]', op.crdir + op.source)
+            self.cmd = ' '.join(op.cmdi[self.ext]).replace('[o]', exepath).replace('[i]', op.crdir + op.source).replace('[n]', self.fname).replace('[d]', './compile/')
+        
     def get_cmd(self):
-        return self.path
+        return self.cmd
 
 class TopCoderTesterQueue(threading.Thread):
     def __init__(self, n, cmdpath, op):
@@ -108,15 +110,17 @@ class TopCoderTesterQueue(threading.Thread):
         threading.Thread.__init__(self)
     def run(self):
         cmd = []
-        # cmd += ['java -jar ' + self.jarpath]
-        cmd += ['java -Xmx1024m -jar ' + self.jarpath]
+        cmd += ['java -jar ' + self.jarpath]
+        # cmd += ['java -Xmx1024m -jar ' + self.jarpath]
         cmd += ['-exec ' + '\"' + self.cmdpath + '\"']
         cmd += ['-seed ' + str(self.n)]
-        cmd += ['-novis']
+        # cmd += ['-novis']
         # cmd += ['-vis']
-        # cmd += ['-save ./images/' + str(self.n) + '.png']
-        
+        # cmd += ['-orig ./example-images/' + str(self.n % 10) + '.jpg']
+        # cmd += ['-save ./images/' + str(self.n) + '.jpg']
+        # cmd += ['-mark']
         cmd = ' '.join(cmd)
+        
         p = Popen(cmd, stdout=PIPE, shell=True)
         
         outerr = p.communicate(timeout=self.op.timeout)
@@ -130,7 +134,7 @@ class TopCoderTesterQueue(threading.Thread):
         if sp in out:
             score = ''
             for i in out.split(sp)[1]:
-                if i.isdigit() or (score == '' and i == '-'):
+                if i.isdigit() or (score == '' and i == '-') or i.lower() == 'e' or i == '.':
                     score += i
                 else:
                     break
@@ -285,9 +289,9 @@ class Test:
         red = lambda x : '\033[41;30m' + x + '\033[0m'
         # result (index, score, cerr)
         index = '{:4d}'.format(result[0])
-        a = '{:14.4f}'.format(result[1])
-        b = '{:14.4f}'.format(result[1] - self.reads[p])
-        e = '-{:14.4f}'.format(self.reads[p])
+        a = '{:16.4f}'.format(result[1])
+        b = '{:16.4f}'.format(result[1] - self.reads[p])
+        e = '-{:16.4f}'.format(self.reads[p])
         t = result[1] - self.reads[p]
         if result[1] < 0:
             b = red(e)

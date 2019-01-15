@@ -2,16 +2,23 @@
 import os
 import sys
 
-# javapathを通す 通ってるならコメントアウト
-javapath = 'C:/Program Files (x86)/Java/jdk1.8.0_112/bin'
+# javapathを通す
+javapath = ''
+with open('./javapath.ini', 'r') as f:
+    for i in f.readlines():
+        if not i.startswith('//') : javapath = i
 sp = ':;'['win' in sys.platform and 'darwin' != sys.platform]
 if not javapath in os.environ['PATH'] : os.environ['PATH'] += sp + javapath
 
 # testerjar.py dir path
 cd = os.path.abspath(os.path.dirname(__file__)).replace('\\', '/')
 
-# ***Vis.java
-target = sys.argv[1]
+# javaファイル
+target = ''
+for i in os.listdir(cd):
+    if 'Vis.java' in i:
+        print(i)
+        target += i
 
 # classname main
 classname = os.path.basename(target).split('.')[0]
