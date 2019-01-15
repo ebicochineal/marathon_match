@@ -1,8 +1,16 @@
 # topcoder_marathon_match
 - BrokenSlotMachines
-- SameColorPairs
-- RoadsAndJunctions
 - CrystalLighting
+- InvestmentAdvice
+- KnightsAndPawns
+- MessageChecksum
+- ProductInventory
+- RoadsAndJunctions
+- SameColorPairs
+- StainedGlass
+- TrucksAndCouriers
+- TypesetterArt
+- WorldCupLineup
 
 # マラソン環境
 #### Win10ノート(i5-3320M)  
