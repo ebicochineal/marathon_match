@@ -128,6 +128,7 @@ class TopCoderTesterQueue(threading.Thread):
         #err = outerr[1].decode('utf-8').replace('\r\n', '\n').strip()
         
         cerr_s, cerr_e = '<cerr>', '</cerr>'
+        cerrf_s, cerrf_e = '<cerrfile>', '</cerrfile>'
         sp, spsub = 'Score = ', 'Score: '
         
         if sp not in out and spsub in out : sp = spsub
@@ -146,11 +147,26 @@ class TopCoderTesterQueue(threading.Thread):
                     for i in cerr.split(cerr_s)[1:]:
                         if i.strip() : t += [i.split(cerr_e)[0]]
                     err = ':'.join(t)
+                
+                # file
+                errf = ''
+                if cerrf_s in cerr:
+                    t = []
+                    for i in cerr.split(cerrf_s)[1:]:
+                        if i.strip() : t += [i.split(cerrf_e)[0]]
+                    errf = '\n'.join(t)
             else:
                 err = cerr
-            self.result = (self.n, decimal.Decimal(score), err)
+            
+            if errf:
+                di = op.crdir + '/' + 'vfiles'
+                try_mkdir(di)
+                with open(di + '/' + 'vis' + str(self.n) + '.txt', 'w') as f:
+                    f.write(errf)
+                
+            self.result = (self.n, decimal.Decimal(score), err, len(errf)>0)
         else:
-            self.result = (self.n, decimal.Decimal(-1), '')
+            self.result = (self.n, decimal.Decimal(-1), '', False)
 
 class Test:
     def __init__(self, start_index, testcnt, op):
@@ -173,7 +189,7 @@ class Test:
     def result_sum_draw(self, start_index, testcnt):
         score = 0
         readscore = 0
-        for i, j, k in self.results:
+        for i, j, k, _ in self.results:
             if j >= 0 : score += j
         for i in self.reads : readscore += i
         print('//', 'test', start_index, testcnt)
@@ -228,11 +244,9 @@ class Test:
         print('// this program : ', str(int((r / bestscore) * 1000000)).rjust(7))
         print('// read score   : ', str(int((p / bestscore) * 1000000)).rjust(7))
         
-        
-    
     def result_file_write(self, start_index, testcnt):
         with open('result' + str(start_index) + '_' + str(testcnt) + '.txt', 'w') as f:
-            for i, j, k in self.results:
+            for i, j, k, _ in self.results:
                 f.write(str(j) + '\n')
     
     def testloop(self, start_index):
@@ -273,9 +287,9 @@ class Test:
         for i in range(start_index, start_index + testcnt) : self.testqueue_indexs.append(i)
     
     def score_reads(self, start_index, testcnt):
-        try_mkdir(op.crdir + 'best')
+        try_mkdir(op.crdir + 'scores')
         self.reads = [decimal.Decimal(0)] * testcnt
-        rp = op.crdir + '/best/' + 'result' + str(start_index) + '_' + str(testcnt) + '.txt'
+        rp = op.crdir + '/scores/' + 'result' + str(start_index) + '_' + str(testcnt) + '.txt'
         if os.path.exists(rp) :
             with open(rp, 'r') as f:
                 self.reads = [decimal.Decimal(x) for x in f.readlines()]
@@ -287,6 +301,8 @@ class Test:
         green = lambda x : '\033[42;30m' + x + '\033[0m'
         yellow = lambda x : '\033[43;30m' + x + '\033[0m'
         red = lambda x : '\033[41;30m' + x + '\033[0m'
+        purple = lambda x : '\033[45;30m' + x + '\033[0m'
+        
         # result (index, score, cerr)
         index = '{:4d}'.format(result[0])
         a = '{:16.4f}'.format(result[1])
@@ -315,12 +331,18 @@ class Test:
         s = ':'.join(result[2].split('\n')) if result[2] else ''
         
         if self.reads[p]:
-            print(index, ': Score', a, b, ':{:8.4f}%'.format((result[1] / self.reads[p])*100),':', s)
+            if result[3]:
+                print(purple('F'), index, ': Score', a, b, ':{:8.4f}%'.format((result[1] / self.reads[p])*100),':', s)
+            else:
+                print(index, ': Score', a, b, ':{:8.4f}%'.format((result[1] / self.reads[p])*100),':', s)
             self.p += (result[1] / self.reads[p])*100
             self.pu += (100 if (result[1] / self.reads[p])*100 < 100 else (result[1] / self.reads[p])*100)
             self.pd += (100 if (result[1] / self.reads[p])*100 > 100 else (result[1] / self.reads[p])*100)
         else:
-            print(index, ': Score', a, b, ':', s)
+            if result[3]:
+                print(purple('F'), index, ': Score', a, b, ':', s)
+            else:
+                print(index, ': Score', a, b, ':', s)
             self.p += 100
             self.pu += 100
             self.pd += 100

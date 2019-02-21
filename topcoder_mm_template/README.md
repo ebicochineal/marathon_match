@@ -1,9 +1,10 @@
 # topcoder_mm_template  
 ## フォルダ  
-best mtestの比較用スコアファイル  
+scores mtestの比較用スコアファイル  
 submits 提出したソースコード  
 compile mtestでコンパイルした実行ファイル  
-tester ***Vis.javaからtester.jarをコンパイルするためのスクリプトが入ってる  
+tester ***Vis.javaからtester.jarをコンパイルするためのスクリプト  
+statistics_script 最終結果統計スクリプト  
 ## mtest.py  
 マルチスレッドでテストする  
 このフォルダにtester.jarがないと動かない
@@ -21,5 +22,3 @@ cmd /k mtest.py
 マルチスレッドテストスクリプト  
 mtest.py 開始位置 件数  
 
-## statistics_script
-最終結果統計スクリプト  

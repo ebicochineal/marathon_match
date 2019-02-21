@@ -115,7 +115,7 @@ class TopCoderTesterQueue(threading.Thread):
         cmd += ['-exec ' + '\"' + self.cmdpath + '\"']
         cmd += ['-seed ' + str(self.n)]
         # cmd += ['-novis']
-        # cmd += ['-vis']
+        cmd += ['-vis']
         # cmd += ['-orig ./example-images/' + str(self.n % 10) + '.jpg']
         # cmd += ['-save ./images/' + str(self.n) + '.jpg']
         # cmd += ['-mark']
@@ -287,9 +287,9 @@ class Test:
         for i in range(start_index, start_index + testcnt) : self.testqueue_indexs.append(i)
     
     def score_reads(self, start_index, testcnt):
-        try_mkdir(op.crdir + 'best')
+        try_mkdir(op.crdir + 'scores')
         self.reads = [decimal.Decimal(0)] * testcnt
-        rp = op.crdir + '/best/' + 'result' + str(start_index) + '_' + str(testcnt) + '.txt'
+        rp = op.crdir + '/scores/' + 'result' + str(start_index) + '_' + str(testcnt) + '.txt'
         if os.path.exists(rp) :
             with open(rp, 'r') as f:
                 self.reads = [decimal.Decimal(x) for x in f.readlines()]
