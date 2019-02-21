@@ -18,5 +18,8 @@ mtest.pyの設定
 cmd /k mtest.py
 
 ## mtest.py
+マルチスレッドテストスクリプト  
 mtest.py 開始位置 件数  
 
+## statistics_script
+最終結果統計スクリプト  
