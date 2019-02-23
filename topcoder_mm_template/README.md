@@ -6,8 +6,9 @@ compile mtestでコンパイルした実行ファイル
 tester ***Vis.javaからtester.jarをコンパイルするためのスクリプト  
 statistics_script 最終結果統計スクリプト  
 ## mtest.py  
-マルチスレッドでテストする  
-このフォルダにtester.jarがないと動かない
+マルチスレッドテストスクリプト  
+このフォルダにtester.jarがないと動かない  
+mtest.py 開始位置 件数
 ## setting.ini  
 mtest.pyの設定  
 テストするソールファイル名  
@@ -16,9 +17,4 @@ mtest.pyの設定
 スレッド数  
 コンパイルオプション  
 ## test.bat
-cmd /k mtest.py
-
-## mtest.py
-マルチスレッドテストスクリプト  
-mtest.py 開始位置 件数  
-
+cmd /k mtest.py  
