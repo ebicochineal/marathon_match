@@ -51,7 +51,7 @@ def get_cr_list(rd):
     text = urllib.request.urlopen(url).read().decode('utf-8')
     s = set()
     for i in text.split('<td class="value"><a href="http://www.topcoder.com/tc?module=MemberProfile')[1:]:
-        cr = i.split('cr=')[1].split('&')[0]
+        cr = i.split('cr=')[1].split('&')[0].split('\"')[0]
         handle = i.split('>')[1].split('<')[0]
         s.add((cr, handle))
     return list(s)

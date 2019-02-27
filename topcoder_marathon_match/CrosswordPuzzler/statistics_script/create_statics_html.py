@@ -80,7 +80,7 @@ def get_results(rd):
             for j in t.split('>')[1:]:
                 j = j.split('<')[0].strip()
                 if j : u += [j]
-            cr = t.split('cr=')[1].split('&')[0]
+            cr = t.split('cr=')[1].split('&')[0].split('\"')[0]
             r += [u[:6] + [cr]]
         r = sorted(r, key = lambda x : int(x[0]))
     return r
