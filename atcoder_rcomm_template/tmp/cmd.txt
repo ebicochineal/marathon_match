@@ -1,0 +1,5 @@
+javac -encoding UTF-8 
+
+
+a.exe < example_01_in.txt > out.txt
+

@@ -107,29 +107,43 @@ class TopCoderTesterQueue(threading.Thread):
         self.jarpath = op.crdir + 'tester.jar'
         self.result = ()
         self.op = op
+        self.fin = self.op.crdir + '/in' + '/'
+        self.fout = self.op.crdir + '/out' + '/'
         threading.Thread.__init__(self)
+    def try_fin_generate(self):
+        fin = self.fin + str(self.n) + '.txt'
+        if not os.path.exists(fin):
+            cmd = 'java Generator -seed' + str(self.n) + ' > ' + self.fin + str(self.n) + '.txt'
+            print(cmd)
+            os.system(cmd)
     def run(self):
-        cmd = []
-        cmd += ['java -jar ' + self.jarpath]
-        # cmd += ['java -Xmx1024m -jar ' + self.jarpath]
-        cmd += ['-exec ' + '\"' + self.cmdpath + '\"']
-        cmd += ['-seed ' + str(self.n)]
-        # cmd += ['-novis']
-        # cmd += ['-vis']
-        # cmd += ['-orig ./example-images/' + str(self.n % 10) + '.jpg']
-        # cmd += ['-save ./images/' + str(self.n) + '.jpg']
-        # cmd += ['-mark']
-        cmd = ' '.join(cmd)
+        self.try_fin_generate()
+        fin = self.fin + str(self.n) + '.txt'
+        fout = self.fout + str(self.n) + '.txt'
         
-        p = Popen(cmd, stdout=PIPE, shell=True)
+        
+        # print(self.cmdpath + ' < ' + fin + ' > ' + fout)
+        # os.system(self.cmdpath + ' < ' + fin + ' > ' + fout)
+        
+        p = Popen(self.cmdpath + ' < ' + fin + ' > ' + fout, stdout=PIPE, stderr=PIPE, shell=True)
+        outerr = p.communicate(timeout=self.op.timeout)
+        pout = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
+        perr = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
+        
+        
+        cmd = 'java Judge ' + fin + ' ' + fout
+        
+        p = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
         
         outerr = p.communicate(timeout=self.op.timeout)
         out = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
-        #err = outerr[1].decode('utf-8').replace('\r\n', '\n').strip()
+        err = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
+        out += ' ' + err + ' ' + perr
         
         cerr_s, cerr_e = '<cerr>', '</cerr>'
         cerrf_s, cerrf_e = '<cerrfile>', '</cerrfile>'
-        sp, spsub = 'Score = ', 'Score: '
+        # sp, spsub = 'Score = ', 'Score: '
+        sp, spsub = 'Score = ', 'score:'
         
         if sp not in out and spsub in out : sp = spsub
         if sp in out:
@@ -163,7 +177,7 @@ class TopCoderTesterQueue(threading.Thread):
                 try_mkdir(di)
                 with open(di + '/' + 'vis' + str(self.n) + '.txt', 'w') as f:
                     f.write(errf)
-                
+            
             self.result = (self.n, decimal.Decimal(score), err, len(errf)>0)
         else:
             self.result = (self.n, decimal.Decimal(-1), '', False)
