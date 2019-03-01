@@ -95,20 +95,15 @@ inline uint32_t xrnd() {
 }
 
 inline double distance (const double &ax, const double &ay, const double &bx, const double &by) {
-    // return hypot(ax - bx, ay - by);
     return sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
 }
 inline double distance (const int &ax, const int &ay, const int &bx, const int &by) {
-    // return hypot(ax - bx, ay - by);
     return sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
 }
-
 inline float distance (const mpos &a, const mpos &b) {
-    // return hypot(ax - bx, ay - by);
     return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 }
 
-float adistance[200][200];
 
 class MM {
 public:
