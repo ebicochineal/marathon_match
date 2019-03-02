@@ -117,64 +117,67 @@ class TopCoderTesterQueue(threading.Thread):
             print(cmd)
             os.system(cmd)
     def run(self):
-        self.try_fin_generate()
-        fin = self.fin + str(self.n) + '.txt'
-        fout = self.fout + str(self.n) + '.txt'
-        
-        p = Popen(self.cmdpath + ' < ' + fin + ' > ' + fout, stdout=PIPE, stderr=PIPE, shell=True)
-        outerr = p.communicate(timeout=self.op.timeout)
-        pout = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
-        perr = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
-        
-        cmd = 'java -cp ' + self.op.crdir + ' Judge ' + fin + ' ' + fout
-        
-        p = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
-        
-        outerr = p.communicate(timeout=self.op.timeout)
-        out = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
-        err = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
-        out += ' ' + err + ' ' + perr
-        
-        cerr_s, cerr_e = '<cerr>', '</cerr>'
-        cerrf_s, cerrf_e = '<cerrfile>', '</cerrfile>'
-        # sp, spsub = 'Score = ', 'Score: '
-        sp, spsub = 'Score = ', 'score:'
-        
-        if sp not in out and spsub in out : sp = spsub
-        if sp in out:
-            score = ''
-            for i in out.split(sp)[1]:
-                if i.isdigit() or (score == '' and i == '-') or i.lower() == 'e' or i == '.':
-                    score += i
+        try:
+            self.try_fin_generate()
+            fin = self.fin + str(self.n) + '.txt'
+            fout = self.fout + str(self.n) + '.txt'
+            
+            p = Popen(self.cmdpath + ' < ' + fin + ' > ' + fout, stdout=PIPE, stderr=PIPE, shell=True)
+            outerr = p.communicate(timeout=self.op.timeout)
+            pout = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
+            perr = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
+            
+            cmd = 'java -cp ' + self.op.crdir + ' Judge ' + fin + ' ' + fout
+            
+            p = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
+            
+            outerr = p.communicate(timeout=self.op.timeout)
+            out = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
+            err = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
+            out += ' ' + err + ' ' + perr
+            
+            cerr_s, cerr_e = '<cerr>', '</cerr>'
+            cerrf_s, cerrf_e = '<cerrfile>', '</cerrfile>'
+            # sp, spsub = 'Score = ', 'Score: '
+            sp, spsub = 'Score = ', 'score:'
+            
+            if sp not in out and spsub in out : sp = spsub
+            if sp in out:
+                score = ''
+                for i in out.split(sp)[1]:
+                    if i.isdigit() or (score == '' and i == '-') or i.lower() == 'e' or i == '.':
+                        score += i
+                    else:
+                        break
+                cerr = out.replace(sp + score, '')
+                if self.op.errtag == 'yes':
+                    err = ''
+                    if cerr_s in cerr:
+                        t = []
+                        for i in cerr.split(cerr_s)[1:]:
+                            if i.strip() : t += [i.split(cerr_e)[0]]
+                        err = ':'.join(t)
+                    
+                    # file
+                    errf = ''
+                    if cerrf_s in cerr:
+                        t = []
+                        for i in cerr.split(cerrf_s)[1:]:
+                            if i.strip() : t += [i.split(cerrf_e)[0]]
+                        errf = '\n'.join(t)
                 else:
-                    break
-            cerr = out.replace(sp + score, '')
-            if self.op.errtag == 'yes':
-                err = ''
-                if cerr_s in cerr:
-                    t = []
-                    for i in cerr.split(cerr_s)[1:]:
-                        if i.strip() : t += [i.split(cerr_e)[0]]
-                    err = ':'.join(t)
+                    err = cerr
                 
-                # file
-                errf = ''
-                if cerrf_s in cerr:
-                    t = []
-                    for i in cerr.split(cerrf_s)[1:]:
-                        if i.strip() : t += [i.split(cerrf_e)[0]]
-                    errf = '\n'.join(t)
+                if errf:
+                    di = self.op.crdir + 'outfiles'
+                    try_mkdir(di)
+                    with open(di + '/' + 'vis' + str(self.n) + '.txt', 'w') as f:
+                        f.write(errf)
+                
+                self.result = (self.n, decimal.Decimal(score), err, len(errf)>0)
             else:
-                err = cerr
-            
-            if errf:
-                di = self.op.crdir + 'outfiles'
-                try_mkdir(di)
-                with open(di + '/' + 'vis' + str(self.n) + '.txt', 'w') as f:
-                    f.write(errf)
-            
-            self.result = (self.n, decimal.Decimal(score), err, len(errf)>0)
-        else:
+                self.result = (self.n, decimal.Decimal(-1), '', False)
+        except:
             self.result = (self.n, decimal.Decimal(-1), '', False)
 
 class Test:

@@ -109,63 +109,66 @@ class TopCoderTesterQueue(threading.Thread):
         self.op = op
         threading.Thread.__init__(self)
     def run(self):
-        cmd = []
-        cmd += ['java -jar ' + self.jarpath]
-        # cmd += ['java -Xmx1024m -jar ' + self.jarpath]
-        cmd += ['-exec ' + '\"' + self.cmdpath + '\"']
-        cmd += ['-seed ' + str(self.n)]
-        # cmd += ['-novis']
-        # cmd += ['-vis']
-        # cmd += ['-orig ./example-images/' + str(self.n % 10) + '.jpg']
-        # cmd += ['-save ./images/' + str(self.n) + '.jpg']
-        # cmd += ['-mark']
-        cmd = ' '.join(cmd)
-        
-        p = Popen(cmd, stdout=PIPE, shell=True)
-        
-        outerr = p.communicate(timeout=self.op.timeout)
-        out = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
-        #err = outerr[1].decode('utf-8').replace('\r\n', '\n').strip()
-        
-        cerr_s, cerr_e = '<cerr>', '</cerr>'
-        cerrf_s, cerrf_e = '<cerrfile>', '</cerrfile>'
-        sp, spsub = 'Score = ', 'Score: '
-        
-        if sp not in out and spsub in out : sp = spsub
-        if sp in out:
-            score = ''
-            for i in out.split(sp)[1]:
-                if i.isdigit() or (score == '' and i == '-') or i.lower() == 'e' or i == '.':
-                    score += i
-                else:
-                    break
-            cerr = out.replace(sp + score, '')
-            if self.op.errtag == 'yes':
-                err = ''
-                if cerr_s in cerr:
-                    t = []
-                    for i in cerr.split(cerr_s)[1:]:
-                        if i.strip() : t += [i.split(cerr_e)[0]]
-                    err = ':'.join(t)
-                
-                # file
-                errf = ''
-                if cerrf_s in cerr:
-                    t = []
-                    for i in cerr.split(cerrf_s)[1:]:
-                        if i.strip() : t += [i.split(cerrf_e)[0]]
-                    errf = '\n'.join(t)
-            else:
-                err = cerr
+        try:
+            cmd = []
+            cmd += ['java -jar ' + self.jarpath]
+            # cmd += ['java -Xmx1024m -jar ' + self.jarpath]
+            cmd += ['-exec ' + '\"' + self.cmdpath + '\"']
+            cmd += ['-seed ' + str(self.n)]
+            # cmd += ['-novis']
+            # cmd += ['-vis']
+            # cmd += ['-orig ./example-images/' + str(self.n % 10) + '.jpg']
+            # cmd += ['-save ./images/' + str(self.n) + '.jpg']
+            # cmd += ['-mark']
+            cmd = ' '.join(cmd)
             
-            if errf:
-                di = self.op.crdir + 'outfiles'
-                try_mkdir(di)
-                with open(di + '/' + 'vis' + str(self.n) + '.txt', 'w') as f:
-                    f.write(errf)
+            p = Popen(cmd, stdout=PIPE, shell=True)
+            
+            outerr = p.communicate(timeout=self.op.timeout)
+            out = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
+            #err = outerr[1].decode('utf-8').replace('\r\n', '\n').strip()
+            
+            cerr_s, cerr_e = '<cerr>', '</cerr>'
+            cerrf_s, cerrf_e = '<cerrfile>', '</cerrfile>'
+            sp, spsub = 'Score = ', 'Score: '
+            
+            if sp not in out and spsub in out : sp = spsub
+            if sp in out:
+                score = ''
+                for i in out.split(sp)[1]:
+                    if i.isdigit() or (score == '' and i == '-') or i.lower() == 'e' or i == '.':
+                        score += i
+                    else:
+                        break
+                cerr = out.replace(sp + score, '')
+                if self.op.errtag == 'yes':
+                    err = ''
+                    if cerr_s in cerr:
+                        t = []
+                        for i in cerr.split(cerr_s)[1:]:
+                            if i.strip() : t += [i.split(cerr_e)[0]]
+                        err = ':'.join(t)
+                    
+                    # file
+                    errf = ''
+                    if cerrf_s in cerr:
+                        t = []
+                        for i in cerr.split(cerrf_s)[1:]:
+                            if i.strip() : t += [i.split(cerrf_e)[0]]
+                        errf = '\n'.join(t)
+                else:
+                    err = cerr
                 
-            self.result = (self.n, decimal.Decimal(score), err, len(errf)>0)
-        else:
+                if errf:
+                    di = self.op.crdir + 'outfiles'
+                    try_mkdir(di)
+                    with open(di + '/' + 'vis' + str(self.n) + '.txt', 'w') as f:
+                        f.write(errf)
+                    
+                self.result = (self.n, decimal.Decimal(score), err, len(errf)>0)
+            else:
+                self.result = (self.n, decimal.Decimal(-1), '', False)
+        except:
             self.result = (self.n, decimal.Decimal(-1), '', False)
 
 class Test:
