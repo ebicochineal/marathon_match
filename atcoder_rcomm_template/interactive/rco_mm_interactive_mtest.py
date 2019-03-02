@@ -107,33 +107,15 @@ class TopCoderTesterQueue(threading.Thread):
         self.jarpath = op.crdir + 'tester.jar'
         self.result = ()
         self.op = op
-        self.fin = self.op.crdir + '/in' + '/'
-        self.fout = self.op.crdir + '/out' + '/'
+        self.fin = self.op.crdir + 'in' + '/'
+        self.fout = self.op.crdir + 'out' + '/'
         threading.Thread.__init__(self)
-    def try_fin_generate(self):
-        fin = self.fin + str(self.n) + '.txt'
-        if not os.path.exists(fin):
-            cmd = 'java Generator -seed' + str(self.n) + ' > ' + self.fin + str(self.n) + '.txt'
-            print(cmd)
-            os.system(cmd)
+    
     def run(self):
-        # self.try_fin_generate()
         fin = self.fin + str(self.n) + '.txt'
         fout = self.fout + str(self.n) + '.txt'
         
-        
-        # print(self.cmdpath + ' < ' + fin + ' > ' + fout)
-        # os.system(self.cmdpath + ' < ' + fin + ' > ' + fout)
-        
-        # p = Popen(self.cmdpath + ' < ' + fin + ' > ' + fout, stdout=PIPE, stderr=PIPE, shell=True)
-        # outerr = p.communicate(timeout=self.op.timeout)
-        # pout = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
-        # perr = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
-        
-        
-        cmd = 'java Judge ' + fin + ' ' + fout
-        
-        cmd = 'java Tester -seed ' + str(self.n) + ' -command ' + self.cmdpath
+        cmd = 'java -cp ' + self.op.crdir + ' Tester -seed ' + str(self.n) + ' -command ' + self.cmdpath
         
         p = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
         
@@ -175,7 +157,7 @@ class TopCoderTesterQueue(threading.Thread):
                 err = cerr
             
             if errf:
-                di = self.op.crdir + '/' + 'vfiles'
+                di = self.op.crdir + 'outfiles'
                 try_mkdir(di)
                 with open(di + '/' + 'vis' + str(self.n) + '.txt', 'w') as f:
                     f.write(errf)
@@ -261,7 +243,7 @@ class Test:
         print('read score   : ', str(int((p / bestscore) * 1000000)).rjust(7))
         
     def result_file_write(self, start_index, testcnt):
-        with open('result' + str(start_index) + '_' + str(testcnt) + '.txt', 'w') as f:
+        with open(self.op.crdir + 'result' + str(start_index) + '_' + str(testcnt) + '.txt', 'w') as f:
             for i, j, k, _ in self.results:
                 f.write(str(j) + '\n')
     
@@ -303,9 +285,9 @@ class Test:
         for i in range(start_index, start_index + testcnt) : self.testqueue_indexs.append(i)
     
     def score_reads(self, start_index, testcnt):
-        try_mkdir(op.crdir + 'scores')
+        try_mkdir(self.op.crdir + 'scores')
         self.reads = [decimal.Decimal(0)] * testcnt
-        rp = op.crdir + '/scores/' + 'result' + str(start_index) + '_' + str(testcnt) + '.txt'
+        rp = self.op.crdir + '/scores/' + 'result' + str(start_index) + '_' + str(testcnt) + '.txt'
         if os.path.exists(rp) :
             with open(rp, 'r') as f:
                 self.reads = [decimal.Decimal(x) for x in f.readlines()]

@@ -159,7 +159,7 @@ class TopCoderTesterQueue(threading.Thread):
                 err = cerr
             
             if errf:
-                di = self.op.crdir + '/' + 'vfiles'
+                di = self.op.crdir + 'outfiles'
                 try_mkdir(di)
                 with open(di + '/' + 'vis' + str(self.n) + '.txt', 'w') as f:
                     f.write(errf)
@@ -245,7 +245,7 @@ class Test:
         print('read score   : ', str(int((p / bestscore) * 1000000)).rjust(7))
         
     def result_file_write(self, start_index, testcnt):
-        with open('result' + str(start_index) + '_' + str(testcnt) + '.txt', 'w') as f:
+        with open(self.op.crdir + 'result' + str(start_index) + '_' + str(testcnt) + '.txt', 'w') as f:
             for i, j, k, _ in self.results:
                 f.write(str(j) + '\n')
     
@@ -287,9 +287,9 @@ class Test:
         for i in range(start_index, start_index + testcnt) : self.testqueue_indexs.append(i)
     
     def score_reads(self, start_index, testcnt):
-        try_mkdir(op.crdir + 'scores')
+        try_mkdir(self.op.crdir + 'scores')
         self.reads = [decimal.Decimal(0)] * testcnt
-        rp = op.crdir + '/scores/' + 'result' + str(start_index) + '_' + str(testcnt) + '.txt'
+        rp = self.op.crdir + '/scores/' + 'result' + str(start_index) + '_' + str(testcnt) + '.txt'
         if os.path.exists(rp) :
             with open(rp, 'r') as f:
                 self.reads = [decimal.Decimal(x) for x in f.readlines()]
