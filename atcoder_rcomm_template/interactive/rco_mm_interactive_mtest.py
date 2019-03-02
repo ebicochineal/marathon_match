@@ -208,10 +208,10 @@ class Test:
         for i, j, k, _ in self.results:
             if j >= 0 : score += j
         for i in self.reads : readscore += i
-        print('//', 'test', start_index, testcnt)
-        print('//', 'Sum :', score, '    PrevSum :', readscore)
-        print('//', 'upcnt :', self.gcnt, '    downcnt :', self.ycnt, '    errcnt :', self.ecnt)
-        print('//', 'all : {:.6f}%'.format(self.p / testcnt - 100), '    up : {:.6f}%'.format(self.pu / testcnt - 100), '    down : {:.6f}%'.format(self.pd / testcnt - 100))
+        print('test', start_index, testcnt)
+        print('ScoreSum :', score, '    ReadScoreSum :', readscore)
+        print('upcnt :', self.gcnt, '    downcnt :', self.ycnt, '    errcnt :', self.ecnt)
+        print('all : {:.6f}%'.format(self.p / testcnt - 100), '    up : {:.6f}%'.format(self.pu / testcnt - 100), '    down : {:.6f}%'.format(self.pd / testcnt - 100))
         print('---')
         h = len(self.results)
         r = p = 0
@@ -257,8 +257,8 @@ class Test:
                 
             cnt += 1
         bestscore = 100 * h
-        print('// this program : ', str(int((r / bestscore) * 1000000)).rjust(7))
-        print('// read score   : ', str(int((p / bestscore) * 1000000)).rjust(7))
+        print('this program : ', str(int((r / bestscore) * 1000000)).rjust(7))
+        print('read score   : ', str(int((p / bestscore) * 1000000)).rjust(7))
         
     def result_file_write(self, start_index, testcnt):
         with open('result' + str(start_index) + '_' + str(testcnt) + '.txt', 'w') as f:
