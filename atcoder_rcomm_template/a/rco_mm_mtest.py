@@ -2,6 +2,7 @@
 import os
 import sys
 import time
+import signal
 import random
 import shutil
 import decimal
@@ -117,21 +118,21 @@ class TopCoderTesterQueue(threading.Thread):
             print(cmd)
             os.system(cmd)
     def run(self):
+        self.try_fin_generate()
+        fin = self.fin + str(self.n) + '.txt'
+        fout = self.fout + str(self.n) + '.txt'
+        
+        p = Popen(self.cmdpath + ' < ' + fin + ' > ' + fout, stdout=PIPE, stderr=PIPE, shell=True)
         try:
-            self.try_fin_generate()
-            fin = self.fin + str(self.n) + '.txt'
-            fout = self.fout + str(self.n) + '.txt'
-            
-            p = Popen(self.cmdpath + ' < ' + fin + ' > ' + fout, stdout=PIPE, stderr=PIPE, shell=True)
             outerr = p.communicate(timeout=self.op.timeout)
             pout = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
             perr = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
             
             cmd = 'java -cp ' + self.op.crdir + ' Judge ' + fin + ' ' + fout
             
-            p = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
+            jp = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
             
-            outerr = p.communicate(timeout=self.op.timeout)
+            outerr = jp.communicate(timeout=self.op.timeout)
             out = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
             err = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
             out += ' ' + err + ' ' + perr
@@ -178,6 +179,7 @@ class TopCoderTesterQueue(threading.Thread):
             else:
                 self.result = (self.n, decimal.Decimal(-1), '', False)
         except:
+            tree_kill(p.pid)
             self.result = (self.n, decimal.Decimal(-1), '', False)
 
 class Test:
@@ -366,11 +368,31 @@ def try_mkdir(dir):
         if not os.path.exists(dir) : os.mkdir(dir)
     except:
         pass
+def tree_kill(pid):
+    if 'win' in sys.platform and 'darwin' != sys.platform:
+        Popen('taskkill /PID %s /T /F'%str(pid), stdout=PIPE, stderr=PIPE)
+    else:
+        p = Popen('ps --ppid ' + str(pid) + ' --no-heading', stdout=PIPE, stderr=PIPE, shell=True)
+        outerr = p.communicate()
+        out = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
+        for i in out.split('\n'):
+            try:
+                cpid = i.split()[0]
+                os.kill(int(cpid), signal.SIGTERM)
+            except:
+                pass
+        os.kill(pid, signal.SIGTERM)
 
 if __name__ == '__main__':
+    def handler(signal, frame) : tree_kill(os.getpid())
+    if 'win' in sys.platform and 'darwin' != sys.platform:
+        signal.signal(signal.SIGBREAK, handler)
+    signal.signal(signal.SIGINT, handler)
+    
     op = Option()
     if len(sys.argv) > 1:# start_index, test_queue, program_option
         Test(int(sys.argv[1]), int(sys.argv[2]), op)
     else:
         Test(1, 100, op)
+
 
