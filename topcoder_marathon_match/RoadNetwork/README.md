@@ -6,3 +6,8 @@
 
 あとはルートを選ぶ順をスワップする焼きなまし  
 この方法でも速度が上がればまだスコア伸びるんだけれど、もう伸びないケースも出てきてたのでスコアに変化が無ければエッジのコストを１万にして山登りと０にしたりして山登りみたいなのも入れた  
+  
+#### Statistics  
+<https://ebicochineal.github.io/marathon_match/topcoder_marathon_match/RoadNetwork/statistics>
+
+

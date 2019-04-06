@@ -27,6 +27,7 @@ class TopCoderMarathonUser:
         self.sumscore = 0
         self.codertype = 'Marathon'
         self.time = 0
+        self.score_percents = []
         
         p = os.path.dirname(__file__).replace('\\', '/') + '/'
         p = '' if p == '/' else p
@@ -129,12 +130,23 @@ for rd in dirs:
         for j in a:
             if float(j.testcases[i][1]) == bestscore : j.bests += 1
             if bestcnt == 1 and float(j.testcases[i][1]) == bestscore : j.uniqs += 1
-
-    o = [['RANK', '', '', 'HANDLE', 'COUNTRY', 'LANG', 'MM', 'ALGO', 'SCORE', '', '', 'BESTS', 'UNIQS', 'ZEROS', 'TIME']]
+            if bestscore > 0:
+                j.score_percents += [(float(j.testcases[i][1]) / bestscore) * 100]
+            else:
+                j.score_percents += [100]
+    # o = [['RANK', '', '', 'HANDLE', 'COUNTRY', 'LANG', 'MM', 'ALGO', 'SCORE', '', '', 'BESTS', 'UNIQS', 'ZEROS', 'TIME']]
+    o = [['RANK', '', '', 'HANDLE', 'COUNTRY', 'LANG', 'MM', 'ALGO', 'SCORE', '', '', 'BESTS', 'UNIQS', 'ZEROS', '25', '50', '90', '95', '98', 'TIME']]
     olens = [len(o[-1][x]) for x in range(len(o[-1]))]
 
     for i in a:
-        o += [list(map(str, [i.rank, '<', i.provisional_rank, i.handle, i.country, i.lang, i.mrating, i.arating, i.final_score, '<', i.provisional_score, i.bests, i.uniqs, i.zeros, i.time]))]
+        u25 = sum(1 for x in i.score_percents if x >= 25)
+        u50 = sum(1 for x in i.score_percents if x >= 50)
+        u90 = sum(1 for x in i.score_percents if x >= 90)
+        u95 = sum(1 for x in i.score_percents if x >= 95)
+        u98 = sum(1 for x in i.score_percents if x >= 98)
+        
+        o += [list(map(str, [i.rank, '<', i.provisional_rank, i.handle, i.country, i.lang, i.mrating, i.arating, i.final_score, '<', i.provisional_score, i.bests, i.uniqs, i.zeros, u25, u50, u90, u95, u98, i.time]))]
+        # i.provisional_score, i.bests, i.uniqs, i.zeros, i.time]))]
         olens = [max(len(o[-1][x]), olens[x]) for x in range(len(o[-1]))]
 
     out = ''

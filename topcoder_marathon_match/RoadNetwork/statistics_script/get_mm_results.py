@@ -10,11 +10,12 @@ def get_topcoder_xml(rd, cr):
     url = 'http://www.topcoder.com/longcontest/stats/?module=IndividualResultsFeed' + '&rd=' + rd +'&cr=' + cr
     return urllib.request.urlopen(url).read().decode('utf-8')
 def create_xml_file(rd, cr):
-    t = get_topcoder_xml(rd, cr)
     p = os.path.dirname(__file__).replace('\\', '/') + '/'
     p = '' if p == '/' else p
     n = rd + '/' + cr + '.xml'
     try_mkdir(p + rd + '/')
+    if os.path.exists(p + n) : return -1
+    t = get_topcoder_xml(rd, cr)
     with open(p + n , 'w') as f : f.write(t)
 def create_html_file(rd):
     url = 'https://community.topcoder.com/longcontest/stats/?module=ViewOverview&nr=1000&rd=' + rd
@@ -27,6 +28,7 @@ def create_html_file(rd):
 def create_b_file(rd, cr, handle):
     p = os.path.dirname(__file__).replace('\\', '/') + '/'
     p = '' if p == '/' else p
+    if os.path.exists(p + rd + '/' + 'b' + cr + '.txt') : return -1
     a = '0'
     m = '0'
     country = '-'
@@ -70,10 +72,26 @@ else:
     
 create_html_file(rd)
 print('get html')
+print('1')
 for cr, handle in get_cr_list(rd):
-    create_b_file(rd, cr, handle)
-    time.sleep(2)
-    create_xml_file(rd, cr)
-    time.sleep(10)
-    print('get', cr, handle)
-
+    try:
+        a = create_b_file(rd, cr, handle)
+        if a < 0:
+            print('pass', cr, handle)
+            continue
+        print('get', cr, handle)
+        time.sleep(2)
+    except:
+        print('err', cr, handle)
+print('2')
+for cr, handle in get_cr_list(rd):
+    try:
+        a = create_xml_file(rd, cr)
+        if a < 0:
+            print('pass', cr, handle)
+            continue
+        print('get', cr, handle)
+        time.sleep(10)
+        
+    except:
+        print('err', cr, handle)
