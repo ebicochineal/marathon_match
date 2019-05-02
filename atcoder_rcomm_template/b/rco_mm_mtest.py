@@ -151,6 +151,7 @@ class TopCoderTesterQueue(threading.Thread):
                     else:
                         break
                 cerr = out.replace(sp + score, '')
+                errf = ''
                 if self.op.errtag == 'yes':
                     err = ''
                     if cerr_s in cerr:
@@ -160,7 +161,6 @@ class TopCoderTesterQueue(threading.Thread):
                         err = ':'.join(t)
                     
                     # file
-                    errf = ''
                     if cerrf_s in cerr:
                         t = []
                         for i in cerr.split(cerrf_s)[1:]:

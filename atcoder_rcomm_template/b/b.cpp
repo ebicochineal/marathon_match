@@ -66,24 +66,24 @@ public:
     }
 };
 
-struct mpos {
+struct e512pos {
 public:
     int x;
     int y;
-    mpos (int x, int y) {
+    e512pos () { this->x = 0; this->y = 0; }
+    e512pos (int x, int y) {
         this->x = x;
         this->y = y;
     }
-    mpos operator + (const mpos &t) { return mpos(this->x + t.x, this->y + t.y); }
-    mpos operator - (const mpos &t) { return mpos(this->x - t.x, this->y - t.y); }
-    bool operator == (const mpos &t) const { return this->x == t.x && this->y == t.y; }
+    e512pos operator + (const e512pos& t) { return e512pos(this->x + t.x, this->y + t.y); }
+    e512pos operator - (const e512pos& t) { return e512pos(this->x - t.x, this->y - t.y); }
+    bool operator == (const e512pos& t) const { return this->x == t.x && this->y == t.y; }
 };
 
 namespace std {
-    template <>
-    class hash<mpos> {
+    template <> class hash<e512pos> {
     public:
-        size_t operator()(const mpos& t) const{ return hash<int>()(t.x<<16) | hash<int>()(t.y); }
+        size_t operator()(const e512pos& t) const{ return hash<int>()(t.x<<16) | hash<int>()(t.y); }
     };
 }
 
