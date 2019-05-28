@@ -18,3 +18,7 @@ mtest.pyの設定
 コンパイルオプション  
 ## test.bat
 cmd /k mtest.py  
+## submitfiles_to_sipfile.py
+新プラットフォームの提出zip作成スクリプト  
+submitfiles_to_sipfile.py ファイルパス（省略化）  
+
