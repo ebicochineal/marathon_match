@@ -74,6 +74,11 @@ dict_sh['.py'] = '''
 #!/bin/sh
 echo 'python3.6 /workdir/{0}.py' > /workdir/command.txt'''[1:]
 
+dict_sh['.cs'] = '''
+#!/bin/sh
+csc /workdir/{0}.cs /out:/workdir/{0}.exe
+echo 'mono /workdir/{0}.exe' > /workdir/command.txt'''[1:]
+
 def try_mkdir(dir):
     try:
         if not os.path.exists(dir) : os.mkdir(dir)
