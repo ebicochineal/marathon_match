@@ -15,35 +15,34 @@
 
 using namespace std;
 
-
 template<class F, class S> string in_v_to_str (const pair<F, S> v);
 template<class F, class S> string v_to_str (const pair<F, S> v);
 string in_v_to_str (const char v) { return "'" + string{v} + "'"; }
-string in_v_to_str (const char *v) { return '"' + v + '"'; }
+string in_v_to_str (const char* v) { return '"' + v + '"'; }
 string in_v_to_str (const string v) { return '"' + v + '"'; }
 template<class T> string in_v_to_str (const T v) { stringstream ss; ss << v; return ss.str(); }
 template<class T> string v_to_str (const T v) { stringstream ss; ss << v; return ss.str(); }
-template<class T, size_t N> string v_to_str (const array<T, N> &v) { stringstream ss; if (v.size() > 0) { ss << "["; for (int i = 0; i < v.size() - 1; ++i) { ss << in_v_to_str(v[i]) << ", "; } ss << in_v_to_str(v[v.size() - 1]) << "]"; } else { ss << "[]"; } return ss.str();
+template<class T, size_t N> string v_to_str (const array<T, N>& v) { stringstream ss; if (v.size() > 0) { ss << "["; for (int i = 0; i < v.size() - 1; ++i) { ss << in_v_to_str(v[i]) << ", "; } ss << in_v_to_str(v[v.size() - 1]) << "]"; } else { ss << "[]"; } return ss.str();
 }
-template<class T, size_t N> string v_to_str (const array< array<T, N>, N > &v) { stringstream ss; if (v.size() > 0) { ss << "["; for (int i = 0; i < v.size() - 1; ++i) { ss << v_to_str(v[i]) << ", "; } ss << v_to_str(v[v.size() - 1]) << "]"; } else { ss << "[-]"; } return ss.str(); }
-template<class T> string v_to_str (const vector<T> &v) { stringstream ss; if (v.size() > 0) { ss << "["; for (int i = 0; i < v.size() - 1; ++i) { ss << in_v_to_str(v[i]) << ", "; } ss << in_v_to_str(v[v.size() - 1]) << "]"; } else { ss << "[]"; } return ss.str(); }
-template<class T> string v_to_str (const vector< vector<T> > &v) { stringstream ss; if (v.size() > 0) { ss << "["; for (int i = 0; i < v.size() - 1; ++i) { ss << v_to_str(v[i]) << ", "; } ss << v_to_str(v[v.size() - 1]) << "]"; } else { ss << "[-]"; } return ss.str(); }
-template<class T> string v_to_str (const set<T> &v) { stringstream ss; int len = v.size(); ss << (v.size() > 0 ? "{" : "{}"); for (auto& i : v) { ss << in_v_to_str(i) << (len-- > 1 ? ", " : "}"); } return ss.str(); }
-template<class K, class V> string v_to_str (const map<K, V> &v) { stringstream ss; int len = v.size(); ss << (v.size() > 0 ? "{" : "{}"); for (auto& i : v) { ss << in_v_to_str(i.first) << " : " << in_v_to_str(i.second) << (len-- > 1 ? ", " : "}"); } return ss.str(); }
-template<class T> string v_to_str (const unordered_set<T> &v) { stringstream ss; int len = v.size(); ss << (v.size() > 0 ? "{" : "{}"); for (auto& i : v) { ss << in_v_to_str(i) << (len-- > 1 ? ", " : "}"); } return ss.str(); }
-template<class K, class V> string v_to_str (const unordered_map<K, V> &v) { stringstream ss; int len = v.size(); ss << (v.size() > 0 ? "{" : "{}"); for (auto& i : v) { ss << in_v_to_str(i.first) << " : " << in_v_to_str(i.second) << (len-- > 1 ? ", " : "}"); } return ss.str(); }
+template<class T, size_t N> string v_to_str (const array< array<T, N>, N >& v) { stringstream ss; if (v.size() > 0) { ss << "["; for (int i = 0; i < v.size() - 1; ++i) { ss << v_to_str(v[i]) << ", "; } ss << v_to_str(v[v.size() - 1]) << "]"; } else { ss << "[-]"; } return ss.str(); }
+template<class T> string v_to_str (const vector<T>& v) { stringstream ss; if (v.size() > 0) { ss << "["; for (int i = 0; i < v.size() - 1; ++i) { ss << in_v_to_str(v[i]) << ", "; } ss << in_v_to_str(v[v.size() - 1]) << "]"; } else { ss << "[]"; } return ss.str(); }
+template<class T> string v_to_str (const vector< vector<T> >& v) { stringstream ss; if (v.size() > 0) { ss << "["; for (int i = 0; i < v.size() - 1; ++i) { ss << v_to_str(v[i]) << ", "; } ss << v_to_str(v[v.size() - 1]) << "]"; } else { ss << "[-]"; } return ss.str(); }
+template<class T> string v_to_str (const set<T>& v) { stringstream ss; int len = v.size(); ss << (v.size() > 0 ? "{" : "{}"); for (auto& i : v) { ss << in_v_to_str(i) << (len-- > 1 ? ", " : "}"); } return ss.str(); }
+template<class K, class V> string v_to_str (const map<K, V>& v) { stringstream ss; int len = v.size(); ss << (v.size() > 0 ? "{" : "{}"); for (auto& i : v) { ss << in_v_to_str(i.first) << " : " << in_v_to_str(i.second) << (len-- > 1 ? ", " : "}"); } return ss.str(); }
+template<class T> string v_to_str (const unordered_set<T>& v) { stringstream ss; int len = v.size(); ss << (v.size() > 0 ? "{" : "{}"); for (auto& i : v) { ss << in_v_to_str(i) << (len-- > 1 ? ", " : "}"); } return ss.str(); }
+template<class K, class V> string v_to_str (const unordered_map<K, V>& v) { stringstream ss; int len = v.size(); ss << (v.size() > 0 ? "{" : "{}"); for (auto& i : v) { ss << in_v_to_str(i.first) << " : " << in_v_to_str(i.second) << (len-- > 1 ? ", " : "}"); } return ss.str(); }
 template<class F, class S> string in_v_to_str (const pair<F, S> v) { stringstream ss; ss << "<" << v_to_str(v.first) << ", " << v_to_str(v.second) << ">"; return ss.str(); }
 template<class F, class S> string v_to_str (const pair<F, S> v) { stringstream ss; ss << "<" << v_to_str(v.first) << ", " << v_to_str(v.second) << ">"; return ss.str(); }
 string print () { return ""; }
-template<typename F, typename... R> string print (const F &f, const R &...r) { stringstream ss; ss << v_to_str(f); if (sizeof...(r) > 0) { ss << " " << print(r...); } return ss.str(); }
+template<typename F, typename... R> string print (const F& f, const R& ...r) { stringstream ss; ss << v_to_str(f); if (sizeof...(r) > 0) { ss << " " << print(r...); } return ss.str(); }
 
-template<typename F, typename... R> void pdebug (const F &f, const R &...r) {
+template<typename F, typename... R> void pdebug (const F& f, const R& ...r) {
     stringstream ss;
     ss << v_to_str(f); if (sizeof...(r) > 0) { ss << " " << print(r...); }
     cerr << "<cerr>" << ss.str() << "</cerr>" << endl;
 }
 
-template<typename F, typename... R> void fdebug (const F &f, const R &...r) {
+template<typename F, typename... R> void fdebug (const F& f, const R& ...r) {
     stringstream ss;
     ss << v_to_str(f); if (sizeof...(r) > 0) { ss << " " << print(r...); }
     cerr << "<cerrfile>" << ss.str() << "</cerrfile>" << endl;
@@ -53,13 +52,24 @@ class StopWatch {
 public:
     int starts;
     int startm;
+    int tstarts = 0;
+    int tstartm = 0;
     struct timeb timebuffer;
     StopWatch () {
         ftime(&this->timebuffer);
         this->starts = this->timebuffer.time;
         this->startm = this->timebuffer.millitm;
     }
-    
+    inline void stop () {
+        ftime(&this->timebuffer);
+        this->tstarts = this->timebuffer.time;
+        this->tstartm = this->timebuffer.millitm;
+    }
+    inline void resume () {
+        ftime(&this->timebuffer);
+        this->starts += this->timebuffer.time - this->tstarts;
+        this->startm += this->timebuffer.millitm - this->tstartm;
+    }
     inline int get_milli_time () {
         ftime(&this->timebuffer);
         return (this->timebuffer.time - this->starts) * 1000 + (this->timebuffer.millitm - this->startm);
@@ -94,13 +104,13 @@ inline uint32_t xrnd() {
     return y = y ^ (y << 5);
 }
 
-inline double distance (const double &ax, const double &ay, const double &bx, const double &by) {
+inline double distance (const double& ax, const double& ay, const double& bx, const double& by) {
     return sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
 }
-inline double distance (const int &ax, const int &ay, const int &bx, const int &by) {
+inline double distance (const int& ax, const int& ay, const int& bx, const int& by) {
     return sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
 }
-inline float distance (const mpos &a, const mpos &b) {
+inline float distance (const e512pos& a, const e512pos& b) {
     return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 }
 
