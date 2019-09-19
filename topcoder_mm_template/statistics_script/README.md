@@ -1,2 +1,3 @@
+- 新プラットフォームになったのでもう使えない  
 - 1 get_mm_results.py  
 - 2 create_statics_html.py  

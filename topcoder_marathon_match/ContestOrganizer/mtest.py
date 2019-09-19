@@ -161,7 +161,7 @@ class TopCoderTesterQueue(threading.Thread):
                 if errf:
                     di = self.op.crdir + 'outfiles'
                     try_mkdir(di)
-                    with open(di + '/' + str(self.n) + '.txt', 'w') as f:
+                    with open(di + '/' + 'vis' + str(self.n) + '.txt', 'w') as f:
                         f.write(errf)
                     
                 self.result = (self.n, decimal.Decimal(score), err, len(errf)>0)
