@@ -1,0 +1,1 @@
+cmd /k vmtest.py 1 1
