@@ -10,6 +10,8 @@ import threading
 from collections import deque
 from subprocess import Popen, PIPE
 
+# start_index, test_queue, program_option
+
 class Option:
     def __init__(self):
         p = os.path.abspath(os.path.dirname(__file__)).replace('\\', '/') + '/'
@@ -24,6 +26,16 @@ class Option:
         self.compare = 'greater'
         self.errtag = 'no'
         self.os = 'win'
+        
+        self.start = 1
+        self.testcnt = 100
+        self.ops = []
+        if len(sys.argv) > 1:
+            self.start = int(sys.argv[1])
+            self.testcnt = int(sys.argv[2])
+        if len(sys.argv) > 3:
+            self.ops = sys.argv[3:]
+        
         sp = ';'
         if len(sys.argv) > 1 : self.op = sys.argv[1].replace('\\', '/')
         if 'win' in sys.platform and 'darwin' != sys.platform:
@@ -64,6 +76,8 @@ class Option:
                             self.compare = s
                         if mode == '[errtag]':
                             self.errtag = s
+                        if mode == '[visoption]':
+                            self.ops += [s]
     # def getch_unix(self):
     #     import sys, tty, termios
     #     fd = sys.stdin.fileno()
@@ -115,12 +129,17 @@ class TopCoderTesterQueue(threading.Thread):
         # cmd += ['java -Xmx1024m -jar ' + self.jarpath]
         cmd += ['-exec ' + '\"' + self.cmdpath + '\"']
         cmd += ['-seed ' + str(self.n)]
-        cmd += ['-novis']
+        # オプションの中に-visとか-novisが含まれていなければ取りあえず-novis
+        if not 'vis' in ''.join(self.op.ops) : cmd += ['-novis']
+        cmd += self.op.ops
         # cmd += ['-vis']
         # cmd += ['-orig ./example-images/' + str(self.n % 10) + '.jpg']
         # cmd += ['-save ./images/' + str(self.n) + '.jpg']
         # cmd += ['-mark']
         cmd = ' '.join(cmd)
+        cmd = cmd.replace('%', str(self.n % 10))
+        cmd = cmd.replace('*', str(self.n))
+        
         p = Popen(cmd, stdout=PIPE, shell=True)
         try:
             outerr = p.communicate(timeout=self.op.timeout)
@@ -172,22 +191,22 @@ class TopCoderTesterQueue(threading.Thread):
             self.result = (self.n, decimal.Decimal(-1), '', False)
 
 class Test:
-    def __init__(self, start_index, testcnt, op):
+    def __init__(self, op):
         sc = SourceCompile(op)
         self.cmdpath = sc.get_cmd()
         print(sc.get_cmd())
         self.op = op
-        self.score_reads(start_index, testcnt)
-        self.init_testqueue_indexs(start_index, testcnt)
+        self.score_reads(self.op.start, self.op.testcnt)
+        self.init_testqueue_indexs(self.op.start, self.op.testcnt)
         self.ecnt = 0
         self.gcnt = 0
         self.ycnt = 0
         self.p = 0
         self.pu = 0
         self.pd = 0
-        self.testloop(start_index)
-        self.result_sum_draw(start_index, testcnt)
-        self.result_file_write(start_index, testcnt)
+        self.testloop(self.op.start)
+        self.result_sum_draw(self.op.start, self.op.testcnt)
+        self.result_file_write(self.op.start, self.op.testcnt)
     
     def result_sum_draw(self, start_index, testcnt):
         score = 0
@@ -291,7 +310,7 @@ class Test:
     
     def score_reads(self, start_index, testcnt):
         try_mkdir(self.op.crdir + 'scores')
-        self.reads = [decimal.Decimal(0)] * testcnt
+        self.reads = [decimal.Decimal(-1)] * testcnt
         rp = self.op.crdir + '/scores/' + 'result' + str(start_index) + '_' + str(testcnt) + '.txt'
         if os.path.exists(rp) :
             with open(rp, 'r') as f:
@@ -299,6 +318,11 @@ class Test:
     
     def result_draw_line(self, result, start_index, draw_index):
         p = draw_index - start_index
+        testindex = result[0]
+        readscore = self.reads[p]
+        progscore = result[1]
+        cerr = result[2]
+        isoutfile = result[3]
         # color
         if 'win' in sys.platform and 'darwin' != sys.platform : os.system('color')
         green = lambda x : '\033[42;30m' + x + '\033[0m'
@@ -307,42 +331,52 @@ class Test:
         purple = lambda x : '\033[45;30m' + x + '\033[0m'
         
         # result (index, score, cerr)
-        index = '{:4d}'.format(result[0])
-        a = '{:16.4f}'.format(result[1])
-        b = '{:16.4f}'.format(result[1] - self.reads[p])
-        e = '-{:16.4f}'.format(self.reads[p])
-        t = result[1] - self.reads[p]
-        if result[1] < 0:
+        index = '{:4d}'.format(testindex)
+        a = '{:16.4f}'.format(progscore)
+        b = '{:16.4f}'.format(progscore - readscore)
+        e = '-{:16.4f}'.format(readscore)
+        t = progscore - readscore
+        if progscore < 0:
             b = red(e)
             self.ecnt += 1
         else:
             if self.op.compare == 'less':
-                if t < 0:
-                    b = green(b)
-                    self.gcnt += 1
-                if t > 0:
-                    b = yellow(b)
-                    self.ycnt += 1
+                if readscore < 0:
+                    if progscore > -1:
+                        b = green(a)
+                        self.gcnt += 1
+                else:
+                    if t < 0:
+                        b = green(b)
+                        self.gcnt += 1
+                    if t > 0:
+                        b = yellow(b)
+                        self.ycnt += 1
             else:
-                if t > 0:
-                    b = green(b)
-                    self.gcnt += 1
-                if t < 0:
-                    b = yellow(b)
-                    self.ycnt += 1
+                if readscore < 0:
+                    if progscore > -1:
+                        b = green(a)
+                        self.gcnt += 1
+                else:
+                    if t > 0:
+                        b = green(b)
+                        self.gcnt += 1
+                    if t < 0:
+                        b = yellow(b)
+                        self.ycnt += 1
         
-        s = ':'.join(result[2].split('\n')) if result[2] else ''
+        s = ':'.join(cerr.split('\n')) if cerr else ''
         
-        if self.reads[p]:
-            if result[3]:
-                print(purple('F'), index, ': Score', a, b, ':{:8.4f}%'.format((result[1] / self.reads[p])*100),':', s)
+        if readscore > -1:
+            if isoutfile:
+                print(purple('F'), index, ': Score', a, b, ':{:8.4f}%'.format((progscore / readscore)*100),':', s)
             else:
-                print(index, ': Score', a, b, ':{:8.4f}%'.format((result[1] / self.reads[p])*100),':', s)
-            self.p += (result[1] / self.reads[p])*100
-            self.pu += (100 if (result[1] / self.reads[p])*100 < 100 else (result[1] / self.reads[p])*100)
-            self.pd += (100 if (result[1] / self.reads[p])*100 > 100 else (result[1] / self.reads[p])*100)
+                print(index, ': Score', a, b, ':{:8.4f}%'.format((progscore / readscore)*100),':', s)
+            self.p += (progscore / readscore)*100
+            self.pu += (100 if (progscore / readscore)*100 < 100 else (progscore / readscore)*100)
+            self.pd += (100 if (progscore / readscore)*100 > 100 else (progscore / readscore)*100)
         else:
-            if result[3]:
+            if isoutfile:
                 print(purple('F'), index, ': Score', a, b, ':', s)
             else:
                 print(index, ': Score', a, b, ':', s)
@@ -379,8 +413,5 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, handler)
     
     op = Option()
-    if len(sys.argv) > 1:# start_index, test_queue, program_option
-        Test(int(sys.argv[1]), int(sys.argv[2]), op)
-    else:
-        Test(1, 100, op)
+    Test(op)
 

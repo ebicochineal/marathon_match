@@ -8,7 +8,8 @@ statistics_script 最終結果統計スクリプト
 ## mtest.py  
 マルチスレッドテストスクリプト  
 このフォルダにtester.jarがないと動かない  
-mtest.py 開始位置 件数
+mtest.py 開始位置 件数  
+mtest.py 開始位置 件数 ビジュアライザオプション  
 ## setting.ini  
 mtest.pyの設定  
 テストするソールファイル名  
@@ -16,6 +17,7 @@ mtest.pyの設定
 スコア比較大小の設定  
 スレッド数  
 コンパイルオプション  
+ビジュアライザオプション  
 ## test.bat
 cmd /k mtest.py  
 ## submitfiles_to_sipfile.py
