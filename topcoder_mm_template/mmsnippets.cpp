@@ -120,7 +120,7 @@ public:
         this->b = b;
         this->cost = cost;
     }
-    bool operator == (const Edge &t) const { return this->a == t.a && this->b == t.b; }
+    bool operator == (const Edge& t) const { return this->a == t.a && this->b == t.b; }
 };
 namespace std {
     template <> class hash<Edge> {
@@ -139,8 +139,8 @@ private:
             this->cost = cost;
             this->index = index;
         }
-        bool operator > (const Node &t) const { return this->cost > t.cost; }
-        bool operator < (const Node &t) const { return this->cost < t.cost; }
+        bool operator > (const Node& t) const { return this->cost > t.cost; }
+        bool operator < (const Node& t) const { return this->cost < t.cost; }
     };
     int tmp = -1;
     vector<int> prevs;
