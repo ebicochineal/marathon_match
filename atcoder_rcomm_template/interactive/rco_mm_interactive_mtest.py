@@ -88,6 +88,7 @@ class SourceCompile:
         self.fname, self.ext = os.path.splitext(op.source)
         self.ext = self.ext[1:]
         self.cmd = op.crdir + op.source
+        exepath = ''
         if self.ext in op.cmdc:
             exepath = cpath + '/' + 'test.exe'
             print('Compile >>>', op.source)
@@ -96,7 +97,10 @@ class SourceCompile:
             os.system(cmd_compile)
             self.cmd = exepath
         if self.ext in op.cmdi:
-            self.cmd = ' '.join(op.cmdi[self.ext]).replace('[o]', exepath).replace('[i]', op.crdir + op.source).replace('[n]', self.fname).replace('[d]', './compile/')
+            if exepath:
+                self.cmd = ' '.join(op.cmdi[self.ext]).replace('[o]', exepath).replace('[i]', op.crdir + op.source).replace('[n]', self.fname).replace('[d]', './compile/')
+            else:
+                self.cmd = ' '.join(op.cmdi[self.ext]).replace('[i]', op.crdir + op.source).replace('[n]', self.fname).replace('[d]', './compile/')
         
     def get_cmd(self):
         return self.cmd

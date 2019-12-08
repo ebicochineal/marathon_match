@@ -153,6 +153,8 @@ public:
     vector<int> rpath;
     int pathcost;
     
+    GraphDijkstra () {}
+    
     GraphDijkstra (int n, vector<Edge> edges, bool undir = false) {
         this->pathcost = 0;
         this->path.clear();
@@ -252,6 +254,17 @@ vector<Edge> gridToGraph (vector< vector<int> >& grid) {
     }
     return r;
 }
+
+inline double distance (const double& ax, const double& ay, const double& bx, const double& by) {
+    return sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
+}
+inline double distance (const int& ax, const int& ay, const int& bx, const int& by) {
+    return sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
+}
+inline float distance (const e512pos& a, const e512pos& b) {
+    return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+}
+
 
 int main () {
     cin.tie(0);
