@@ -11,9 +11,9 @@ from collections import deque
 from subprocess import Popen, PIPE
 
 generatecmd = 'py -3 generator.py'
-jadgecmd = 'py -3 judge.py'
+judgecmd = 'py -3 judge.py'
 # generatecmd = 'python3 generator.py'
-# jadgecmd = 'python3 judge.py'
+# judgecmd = 'python3 judge.py'
 
 class Option:
     def __init__(self):
@@ -137,7 +137,7 @@ class TopCoderTesterQueue(threading.Thread):
             pout = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
             perr = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
             
-            cmd = jadgecmd + ' ' + fin + ' ' + fout
+            cmd = judgecmd + ' ' + fin + ' ' + fout
             
             jp = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
             
