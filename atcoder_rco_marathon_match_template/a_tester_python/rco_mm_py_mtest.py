@@ -145,7 +145,7 @@ class TopCoderTesterQueue(threading.Thread):
             out = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
             err = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
             out += ' ' + err + ' ' + perr
-            print(out)
+            # print(out)
             cerr_s, cerr_e = '<cerr>', '</cerr>'
             cerrf_s, cerrf_e = '<cerrfile>', '</cerrfile>'
             # sp, spsub = 'Score = ', 'Score: '

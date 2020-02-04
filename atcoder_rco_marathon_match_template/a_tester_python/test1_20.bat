@@ -1,1 +1,1 @@
-cmd /k rco_mm_mtest.py 1 20
+cmd /k rco_mm_py_mtest.py 1 20
