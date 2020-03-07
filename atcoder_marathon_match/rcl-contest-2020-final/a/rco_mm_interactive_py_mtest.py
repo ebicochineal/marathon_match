@@ -10,6 +10,13 @@ import threading
 from collections import deque
 from subprocess import Popen, PIPE
 
+judgecmd = 'py -3 tester.py'
+
+# generatecmd = 'py -3 generator.py'
+# judgecmd = 'py -3 judge.py'
+# generatecmd = 'python3 generator.py'
+# judgecmd = 'python3 judge.py'
+
 class Option:
     def __init__(self):
         p = os.path.abspath(os.path.dirname(__file__)).replace('\\', '/') + '/'
@@ -120,7 +127,10 @@ class TopCoderTesterQueue(threading.Thread):
         fin = self.fin + str(self.n) + '.txt'
         fout = self.fout + str(self.n) + '.txt'
         
-        cmd = 'java -cp ' + self.op.crdir + ' Tester -seed ' + str(self.n) + ' -command ' + self.cmdpath
+        # cmd = 'java -cp ' + self.op.crdir + ' Tester -seed ' + str(self.n) + ' -command ' + self.cmdpath
+        cmd = judgecmd + ' -seed ' + str(self.n) + ' -command ' + '\"' + self.cmdpath + '\"'
+        # print(cmd)
+        
         
         p = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
         try:
@@ -128,7 +138,9 @@ class TopCoderTesterQueue(threading.Thread):
             out = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
             err = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
             out += ' ' + err
-            # print(err)
+            
+            # print(out)
+            
             cerr_s, cerr_e = '<cerr>', '</cerr>'
             cerrf_s, cerrf_e = '<cerrfile>', '</cerrfile>'
             # sp, spsub = 'Score = ', 'Score: '
@@ -140,6 +152,8 @@ class TopCoderTesterQueue(threading.Thread):
                 for i in out.split(sp)[1]:
                     if i.isdigit() or (score == '' and i == '-') or i.lower() == 'e' or i == '.':
                         score += i
+                    elif score == '' and i == ' ':
+                        continue
                     else:
                         break
                 cerr = out.replace(sp + score, '')

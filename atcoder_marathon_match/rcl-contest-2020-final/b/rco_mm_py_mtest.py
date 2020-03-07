@@ -10,6 +10,11 @@ import threading
 from collections import deque
 from subprocess import Popen, PIPE
 
+generatecmd = 'py -3 generator.py'
+judgecmd = 'py -3 judge.py'
+# generatecmd = 'python3 generator.py'
+# judgecmd = 'python3 judge.py'
+
 class Option:
     def __init__(self):
         p = os.path.abspath(os.path.dirname(__file__)).replace('\\', '/') + '/'
@@ -118,8 +123,8 @@ class TopCoderTesterQueue(threading.Thread):
     def try_fin_generate(self):
         fin = self.fin + str(self.n) + '.txt'
         if not os.path.exists(fin):
-            cmd = 'java -cp ' + self.op.crdir + ' Generator -seed' + str(self.n) + ' > ' + self.fin + str(self.n) + '.txt'
-            print(cmd)
+            cmd = generatecmd + ' ' + str(self.n) + ' > ' + self.fin + str(self.n) + '.txt'
+            #print(cmd)
             os.system(cmd)
     def run(self):
         self.try_fin_generate()
@@ -132,7 +137,7 @@ class TopCoderTesterQueue(threading.Thread):
             pout = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
             perr = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
             
-            cmd = 'java -cp ' + self.op.crdir + ' Judge ' + fin + ' ' + fout
+            cmd = judgecmd + ' ' + fin + ' ' + fout
             
             jp = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
             
@@ -140,7 +145,7 @@ class TopCoderTesterQueue(threading.Thread):
             out = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
             err = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
             out += ' ' + err + ' ' + perr
-            
+            #print(out)
             cerr_s, cerr_e = '<cerr>', '</cerr>'
             cerrf_s, cerrf_e = '<cerrfile>', '</cerrfile>'
             # sp, spsub = 'Score = ', 'Score: '
@@ -152,6 +157,8 @@ class TopCoderTesterQueue(threading.Thread):
                 for i in out.split(sp)[1]:
                     if i.isdigit() or (score == '' and i == '-') or i.lower() == 'e' or i == '.':
                         score += i
+                    elif score == '' and i == ' ':
+                        continue
                     else:
                         break
                 cerr = out.replace(sp + score, '')

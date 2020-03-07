@@ -10,13 +10,6 @@ import threading
 from collections import deque
 from subprocess import Popen, PIPE
 
-judgecmd = 'py -3 tester.py'
-
-# generatecmd = 'py -3 generator.py'
-# judgecmd = 'py -3 judge.py'
-# generatecmd = 'python3 generator.py'
-# judgecmd = 'python3 judge.py'
-
 class Option:
     def __init__(self):
         p = os.path.abspath(os.path.dirname(__file__)).replace('\\', '/') + '/'
@@ -122,28 +115,34 @@ class TopCoderTesterQueue(threading.Thread):
         self.fin = self.op.crdir + 'in' + '/'
         self.fout = self.op.crdir + 'out' + '/'
         threading.Thread.__init__(self)
-    
+    def try_fin_generate(self):
+        fin = self.fin + str(self.n) + '.txt'
+        if not os.path.exists(fin):
+            cmd = 'java -cp ' + self.op.crdir + ' Generator -seed' + str(self.n) + ' > ' + self.fin + str(self.n) + '.txt'
+            print(cmd)
+            os.system(cmd)
     def run(self):
+        self.try_fin_generate()
         fin = self.fin + str(self.n) + '.txt'
         fout = self.fout + str(self.n) + '.txt'
         
-        # cmd = 'java -cp ' + self.op.crdir + ' Tester -seed ' + str(self.n) + ' -command ' + self.cmdpath
-        cmd = judgecmd + ' -seed ' + str(self.n) + ' -command ' + '\"' + self.cmdpath + '\"'
-        # print(cmd)
-        
-        
-        p = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
+        p = Popen(self.cmdpath + ' < ' + fin + ' > ' + fout, stdout=PIPE, stderr=PIPE, shell=True)
         try:
             outerr = p.communicate(timeout=self.op.timeout)
+            pout = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
+            perr = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
+            
+            cmd = 'java -cp ' + self.op.crdir + ' Judge ' + fin + ' ' + fout
+            
+            jp = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
+            
+            outerr = jp.communicate(timeout=self.op.timeout)
             out = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
             err = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
-            out += ' ' + err
-            
-            # print(out)
+            out += ' ' + err + ' ' + perr
             
             cerr_s, cerr_e = '<cerr>', '</cerr>'
             cerrf_s, cerrf_e = '<cerrfile>', '</cerrfile>'
-            
             sp, spsub = 'Score = ', 'score:'
             
             if sp not in out and spsub in out : sp = spsub
@@ -349,7 +348,7 @@ class Test:
                     self.ycnt += 1
         
         s = ':'.join(result[2].split('\n')) if result[2] else ''
-        # s = '\n' + s.replace(':', '\n')######
+        
         if self.reads[p]:
             if result[3]:
                 print(purple('F'), index, ': Score', a, b, ':{:8.4f}%'.format((result[1] / self.reads[p])*100),':', s)
@@ -400,3 +399,5 @@ if __name__ == '__main__':
         Test(int(sys.argv[1]), int(sys.argv[2]), op)
     else:
         Test(1, 100, op)
+
+

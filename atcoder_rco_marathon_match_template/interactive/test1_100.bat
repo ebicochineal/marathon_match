@@ -1,1 +1,0 @@
-cmd /k rco_mm_interactive_mtest.py 1 100

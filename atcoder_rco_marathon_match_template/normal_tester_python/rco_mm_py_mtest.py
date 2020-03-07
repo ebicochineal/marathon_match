@@ -148,7 +148,6 @@ class TopCoderTesterQueue(threading.Thread):
             # print(out)
             cerr_s, cerr_e = '<cerr>', '</cerr>'
             cerrf_s, cerrf_e = '<cerrfile>', '</cerrfile>'
-            # sp, spsub = 'Score = ', 'Score: '
             sp, spsub = 'Score = ', 'score:'
             
             if sp not in out and spsub in out : sp = spsub
@@ -157,6 +156,8 @@ class TopCoderTesterQueue(threading.Thread):
                 for i in out.split(sp)[1]:
                     if i.isdigit() or (score == '' and i == '-') or i.lower() == 'e' or i == '.':
                         score += i
+                    elif score == '' and i == ' ':# sp, spsub = 'Score = ', 'Score: '
+                        continue
                     else:
                         break
                 cerr = out.replace(sp + score, '')
