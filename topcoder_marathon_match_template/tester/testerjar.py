@@ -18,7 +18,7 @@ if not javapath in os.environ['PATH'] : os.environ['PATH'] += sp + javapath
 # javaファイル
 target = ''
 for i in os.listdir(cd):
-    if 'Vis.java' in i:
+    if '.java' in i:
         print(cd + i)
         target = cd + i
 
