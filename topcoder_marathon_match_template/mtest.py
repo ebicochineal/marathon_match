@@ -26,6 +26,7 @@ class Option:
         self.compare = 'greater'
         self.errtag = 'no'
         self.os = 'win'
+        self.tester = 'tester.jar'
         
         self.start = 1
         self.testcnt = 100
@@ -78,6 +79,8 @@ class Option:
                             self.errtag = s
                         if mode == '[visoption]':
                             self.ops += [s]
+                        if mode == '[tester]':
+                            self.tester = s
     # def getch_unix(self):
     #     import sys, tty, termios
     #     fd = sys.stdin.fileno()
@@ -122,7 +125,8 @@ class TopCoderTesterQueue(threading.Thread):
     def __init__(self, n, cmdpath, op):
         self.n = n
         self.cmdpath = cmdpath
-        self.jarpath = op.crdir + 'tester.jar'
+        # self.jarpath = op.crdir + 'tester.jar'
+        self.jarpath = op.crdir + op.tester
         self.result = ()
         self.op = op
         threading.Thread.__init__(self)
@@ -370,7 +374,7 @@ class Test:
         
         s = ':'.join(cerr.split('\n')) if cerr else ''
         
-        if readscore > 0:
+        if readscore > -1:
             if isoutfile:
                 print(purple('F'), index, ': Score', a, b, ':{:8.4f}%'.format((progscore / readscore)*100),':', s)
             else:
