@@ -23,8 +23,3 @@ cmd /k mtest.py
 ## submitfiles_to_sipfile.py
 新プラットフォームの提出zip作成スクリプト  
 submitfiles_to_zipfile.py ファイルパス（省略化）  
-## mtest202005.py
-テスターがtester.jarから問題名.jarに変わったので追加  
-[tester]  
-*.jar  
-
