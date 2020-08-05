@@ -13,7 +13,7 @@ with open(cd + 'javapath.ini', 'r') as f:
 sp = ':;'['win' in sys.platform and 'darwin' != sys.platform]
 if not javapath in os.environ['PATH'] : os.environ['PATH'] += sp + javapath
 
-
+if not cd in os.environ['PATH'] : os.environ['PATH'] += sp + cd
 
 # javaファイル
 target = ''
@@ -38,7 +38,7 @@ tester = cd + 'tester.jar'
 if not os.path.exists(dir) : os.mkdir(dir)
 
 # compile
-cmd = 'javac -d ' + dir + ' ' + target
+cmd = 'javac -d ' + dir + ' -classpath ' + cd + ' ' + target
 os.system(cmd)
 
 # manifest
@@ -46,6 +46,7 @@ with open(manifest, 'w') as f : f.write('Main-Class: ' + classname + '\n')
 
 # jar package
 cmd = 'jar cvfm ' + tester + ' ' + manifest + ' -C ' + dir + ' .'
+
 os.system(cmd)
 
 
