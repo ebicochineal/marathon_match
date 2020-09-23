@@ -8,8 +8,14 @@ statistics_script 最終結果統計スクリプト
 ## mtest.py  
 マルチスレッドテストスクリプト  
 このフォルダにtester.jarがないと動かない  
+```
+コマンド例
 mtest.py 開始位置 件数  
-mtest.py 開始位置 件数 ビジュアライザオプション  
+mtest.py 開始位置 件数 topcoderビジュアライザオプション
+mtest.py 開始位置 件数 topcoderビジュアライザオプション -maxthread1  
+mtest.py 開始位置 件数 topcoderビジュアライザオプション -maxthread4  
+```
+
 ## setting.ini  
 mtest.pyの設定  
 テストするソールファイル名  

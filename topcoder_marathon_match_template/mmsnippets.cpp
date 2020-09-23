@@ -48,6 +48,14 @@ template<typename F, typename... R> void fdebug (const F& f, const R& ...r) {
     cerr << "<cerrfile>" << ss.str() << "</cerrfile>" << endl;
 }
 
+template<typename F, typename... R> void tdebug (const F& f, const R& ...r) {
+    stringstream ss;
+    ss << v_to_str(f); if (sizeof...(r) > 0) { ss << " " << print(r...); }
+    cerr << "<cerr>[time]" << ss.str() << "</cerr>" << endl;
+}
+
+
+
 struct e512pos {
 public:
     int x;
