@@ -85,6 +85,8 @@ class Option:
         for i in self.ops:
             if '-maxthread' in i:
                 self.maxthread = int(i[10:])
+            elif '-sample' in i:
+                self.source = 'sample.cpp'
             else:
                 tmp += [i]
         self.ops = tmp
@@ -155,7 +157,6 @@ class TopCoderTesterQueue(threading.Thread):
         cmd = ' '.join(cmd)
         cmd = cmd.replace('%', str(self.n % 10))
         cmd = cmd.replace('*', str(self.n))
-        
         p = Popen(cmd, stdout=PIPE, shell=True)
         try:
             outerr = p.communicate(timeout=self.op.timeout)
@@ -173,7 +174,8 @@ class TopCoderTesterQueue(threading.Thread):
             if sp in out:
                 score = ''
                 for i in out.split(sp)[1]:
-                    if i.isdigit() or (score == '' and i == '-') or i.lower() == 'e' or i == '.':
+                    # if i.isdigit() or (score == '' and i == '-') or i.lower() == 'e' or i == '.':
+                    if i.isdigit() or i == '-' or i.lower() == 'e' or i == '.':
                         score += i
                     else:
                         break
@@ -204,7 +206,6 @@ class TopCoderTesterQueue(threading.Thread):
                         errf = '\n'.join(t)
                 else:
                     err = cerr
-                
                 if errf:
                     di = self.op.crdir + 'outfiles'
                     try_mkdir(di)
@@ -397,7 +398,7 @@ class Test:
         
         s = ':'.join(cerr.split('\n')) if cerr else ''
         
-        if readscore > -1:
+        if readscore > 0:
             if isoutfile:
                 print(purple('F'), index, ': Score', a, b, ':{:8.4f}%'.format((progscore / readscore)*100),':', s)
             else:
