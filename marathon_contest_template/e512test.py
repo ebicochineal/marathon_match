@@ -218,6 +218,7 @@ class TopCoderTesterQueue(threading.Thread):
             if self.op.type == 'half_marathon_interactive_java' : out = self.half_marathon_interactive_java()
             if self.op.type == 'half_marathon_interactive_python' : out = self.half_marathon_interactive_python()
             if self.op.type == 'atcoder_heuristic' : out = self.atcoder_heuristic()
+            if self.op.type == 'topcoder_marathon' : out = self.topcoder_marathon()
             
             # print(out)
             cerr_s, cerr_e = '<cerr>', '</cerr>'
