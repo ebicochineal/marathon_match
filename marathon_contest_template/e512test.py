@@ -355,11 +355,12 @@ class Test:
                 
             cnt += 1
         bestscore = 100 * h
+        
         print('this program : ', str(int((r / bestscore) * 1000000)).rjust(7))
         print('read score   : ', str(int((p / bestscore) * 1000000)).rjust(7))
-        
-        print('VScore : {:,}'.format(int((score / len(self.results)) * 50)))
-        print((score / len(self.results)))
+        if self.op.type == 'atcoder_heuristic':
+            print('50case score : {:,}'.format(int((score / len(self.results)) * 50)))
+            print('average score',(score / len(self.results)))
         
     def result_file_write(self, start_index, testcnt):
         with open(self.op.crdir + 'result' + str(start_index) + '_' + str(testcnt) + '.txt', 'w') as f:
