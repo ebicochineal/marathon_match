@@ -8,7 +8,16 @@ compile e512testでコンパイルした実行ファイル
 tester ***Vis.javaからtester.jarをコンパイルするためのスクリプト  
 ## e512test.py  
 マルチスレッドテストスクリプト  
-このフォルダにtesterがないと動かない  
+このフォルダに無いと動かない物  
+- topcoder marathon match
+  - tester.jar
+- atcoder heuristic contest
+  - gen, vis
+- atcoder halfmarathon interactive python
+  - tester.py
+- atcoder halfmarathon python
+  - judge.py, generator.py
+
 ```
 コマンド例
 e512test.py 開始位置 件数  

@@ -488,7 +488,7 @@ def tree_kill(pid):
                 pass
         os.kill(pid, signal.SIGTERM)
 
-def infile_generate(s, cnt, op):
+def input_file_generate(s, cnt, op):
     fin = op.crdir + 'in/'
     
     try:
@@ -514,7 +514,7 @@ def infile_generate(s, cnt, op):
                 os.rename(tmpfilepath, filepath)
             os.chdir(tmpcrdir)
     except:
-        print('gemnerate error')
+        print('generate error')
 
 if __name__ == '__main__':
     def handler(signal, frame) : tree_kill(os.getpid())
@@ -524,10 +524,10 @@ if __name__ == '__main__':
     
     op = Option()
     if len(sys.argv) > 1:# start_index, test_queue, program_option
-        infile_generate(int(sys.argv[1]), int(sys.argv[2]), op)
+        input_file_generate(int(sys.argv[1]), int(sys.argv[2]), op)
         Test(int(sys.argv[1]), int(sys.argv[2]), op)
     else:
-        infile_generate(1, 100, op)
+        input_file_generate(1, 100, op)
         Test(1, 100, op)
         
 
