@@ -1,3 +1,7 @@
+#pragma GCC optimize("O3")
+#pragma GCC optimize("unroll-loops")
+#pragma GCC optimize("inline")
+
 #include <cmath>
 #include <string>
 #include <array>
@@ -274,12 +278,179 @@ inline float distance (const e512pos& a, const e512pos& b) {
 }
 
 
+inline bool insidexywh (const int x, const int y, const int w, const int h) {
+    return (0 <= x && x < w && 0 <= y && y < h);
+}
+
+// SA
+template<class T>
+double calcscore (T v) { return 0; }
+
+template<class T>
+class Random2optSwap {
+public:
+    int a, b;
+    Random2optSwap (T& v, int l, int r) {
+        int t = max(((int)v.size() - l - r), 1);
+        this->a = xrnd() % t + l;
+        this->b = xrnd() % t + l;
+        if (this->a > this->b) { swap(this->a, this->b); }
+        reverse(v.begin()+this->a, v.begin()+this->b+1);
+    }
+    void cancel (T& v) {
+        reverse(v.begin()+this->a, v.begin()+this->b+1);
+    }
+};
+
+template<class T>
+T maximize_sa (T v, double& refscore, int etime, double stemp = 256.0, double etemp = 0.0) {
+    StopWatch sw;
+    int stime = 0;
+    const double satime = etime - stime;
+    int ntime = stime;
+    T bestv = v;
+    double bestscore = calcscore(v);
+    double lastscore = bestscore;
+    const int64_t R = 1000000000;
+    int cnt = 0;
+    while (true) {
+        ntime = sw.get_milli_time();
+        if (ntime >= etime) { break; }
+        const double temp = stemp + (etemp - stemp) * (double)(ntime-stime) / satime;
+        int a = xrnd() % v.size();////
+        int b = xrnd() % v.size();////
+        swap(v[a], v[b]);////
+        double tmpscore = calcscore(v);
+        const double probability = exp((tmpscore - lastscore) / temp);
+        const bool FORCE_NEXT = probability > (double)(xrnd() % R) / R;
+        if (tmpscore > lastscore || FORCE_NEXT) {
+            lastscore = tmpscore;
+            if (tmpscore > bestscore) {
+                bestscore = tmpscore;
+                bestv = v;
+            }
+        } else {
+            swap(v[a], v[b]);
+        }
+        cnt += 1;
+    }
+    refscore = bestscore;
+    return bestv;
+}
+
+template<class T>
+T maximize_sa_fixedstep (T v, double& refscore, int ecnt, double stemp = 256.0, double etemp = 0.0) {
+    const double sacnt = ecnt;
+    T bestv = v;
+    double bestscore = calcscore(v);
+    double lastscore = bestscore;
+    const int64_t R = 1000000000;
+    for (int ncnt = 0; ncnt < ecnt; ++ncnt) {
+        const double temp = stemp + (etemp - stemp) * (double)(ncnt) / sacnt;
+        int a = xrnd() % v.size();////
+        int b = xrnd() % v.size();////
+        swap(v[a], v[b]);////
+        double tmpscore = calcscore(v);
+        const double probability = exp((tmpscore - lastscore) / temp);
+        const bool FORCE_NEXT = probability > (double)(xrnd() % R) / R;
+        
+        if (tmpscore > lastscore || FORCE_NEXT) {
+            lastscore = tmpscore;
+            if (tmpscore > bestscore) {
+                bestscore = tmpscore;
+                bestv = v;
+            }
+        } else {
+            swap(v[a], v[b]);
+        }
+    }
+    refscore = bestscore;
+    return bestv;
+}
+
+template<class T>
+T minimize_sa (T v, double& refscore, int etime, double stemp = 256.0, double etemp = 0.0) {
+    StopWatch sw;
+    int stime = 0;
+    const double satime = etime - stime;
+    int ntime = stime;
+    T bestv = v;
+    double bestscore = calcscore(v);
+    double lastscore = bestscore;
+    const int64_t R = 1000000000;
+    int cnt = 0;
+    while (true) {
+        ntime = sw.get_milli_time();
+        if (ntime >= etime) { break; }
+        const double temp = stemp + (etemp - stemp) * (double)(ntime-stime) / satime;
+        int a = xrnd() % v.size();////
+        int b = xrnd() % v.size();////
+        swap(v[a], v[b]);////
+        double tmpscore = calcscore(v);
+        const double probability = exp((lastscore - tmpscore) / temp);
+        const bool FORCE_NEXT = probability > (double)(xrnd() % R) / R;
+        if (tmpscore < lastscore || FORCE_NEXT) {
+            lastscore = tmpscore;
+            if (tmpscore < bestscore) {
+                bestscore = tmpscore;
+                bestv = v;
+            }
+        } else {
+            swap(v[a], v[b]);
+        }
+        cnt += 1;
+    }
+    refscore = bestscore;
+    return bestv;
+}
+
+template<class T>
+T minimize_sa_fixedstep (T v, double& refscore, int ecnt, double stemp = 256.0, double etemp = 0.0) {
+    const double sacnt = ecnt;
+    T bestv = v;
+    double bestscore = calcscore(v);
+    double lastscore = bestscore;
+    const int64_t R = 1000000000;
+    for (int ncnt = 0; ncnt < ecnt; ++ncnt) {
+        const double temp = stemp + (etemp - stemp) * (double)(ncnt) / sacnt;
+        int a = xrnd() % v.size();////
+        int b = xrnd() % v.size();////
+        swap(v[a], v[b]);////
+        double tmpscore = calcscore(v);
+        const double probability = exp((lastscore - tmpscore) / temp);
+        const bool FORCE_NEXT = probability > (double)(xrnd() % R) / R;
+        if (tmpscore < lastscore || FORCE_NEXT) {
+            lastscore = tmpscore;
+            if (tmpscore < bestscore) {
+                bestscore = tmpscore;
+                bestv = v;
+            }
+        } else {
+            swap(v[a], v[b]);
+        }
+    }
+    refscore = bestscore;
+    return bestv;
+}
+
+class MM {
+public:
+    StopWatch sw;
+    MM () { this->sw = StopWatch(); }
+    void input () {}
+    void output () {}
+    void calc () {}
+};
+
+
 int main () {
     cin.tie(0);
     ios::sync_with_stdio(false);
     
-    StopWatch sw;
-    cout << sw.get_milli_time() << endl;
+    MM mm;
+    mm.input();
+    mm.calc();
+    mm.output();
     
     return 0;
 }

@@ -208,6 +208,12 @@ class TopCoderTesterQueue(threading.Thread):
         outerr = jp.communicate(timeout=self.op.timeout)
         out = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
         err = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
+        if 'score' not in out.lower():
+            try:
+                float(out)
+                out = 'Score = ' + out
+            except:
+                pass
         return out + ' ' + err + ' ' + perr
 
     def run(self):
@@ -218,6 +224,7 @@ class TopCoderTesterQueue(threading.Thread):
             if self.op.type == 'half_marathon_interactive_java' : out = self.half_marathon_interactive_java()
             if self.op.type == 'half_marathon_interactive_python' : out = self.half_marathon_interactive_python()
             if self.op.type == 'atcoder_heuristic' : out = self.atcoder_heuristic()
+            if self.op.type == 'atcoder_heuristic_gen_redirect' : out = self.atcoder_heuristic()
             if self.op.type == 'topcoder_marathon' : out = self.topcoder_marathon()
             
             # print(out)
@@ -359,8 +366,9 @@ class Test:
         
         print('this program : ', str(int((r / bestscore) * 1000000)).rjust(7))
         print('read score   : ', str(int((p / bestscore) * 1000000)).rjust(7))
-        if self.op.type == 'atcoder_heuristic':
+        if self.op.type == 'atcoder_heuristic' or self.op.type == 'atcoder_heuristic_gen_redirect':
             print('50case score : {:,}'.format(int((score / len(self.results)) * 50)))
+            print('100case score : {:,}'.format(int((score / len(self.results)) * 100)))
             print('average score',(score / len(self.results)))
         
     def result_file_write(self, start_index, testcnt):
@@ -507,6 +515,11 @@ def input_file_generate(s, cnt, op):
                 print(cmd)
                 os.system(cmd)
             if op.type == 'atcoder_heuristic':
+                with open(fin + 'seed.txt', 'w') as f : f.write(str(i))
+                os.system('gen ' + fin + 'seed.txt')
+                tmpfilepath= fin + '0000.txt'
+                os.rename(tmpfilepath, filepath)
+            if op.type == 'atcoder_heuristic_gen_redirect':
                 tmpfilepath= fin + '0000.txt'
                 with Popen(op.crdir + 'gen', shell=True, stdin=PIPE, stdout=PIPE, stderr=sys.stderr, universal_newlines=True) as p:
                     p.stdin.write(str(i))
