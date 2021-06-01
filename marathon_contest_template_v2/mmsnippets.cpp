@@ -316,11 +316,11 @@ T maximize_sa (T v, double& refscore, int etime, double stemp = 256.0, double et
     while (true) {
         ntime = sw.get_milli_time();
         if (ntime >= etime) { break; }
-        const double temp = stemp + (etemp - stemp) * (double)(ntime-stime) / satime;
         int a = xrnd() % v.size();////
         int b = xrnd() % v.size();////
         swap(v[a], v[b]);////
         double tmpscore = calcscore(v);
+        const double temp = stemp + (etemp - stemp) * (double)(ntime-stime) / satime;
         const double probability = exp((tmpscore - lastscore) / temp);
         const bool FORCE_NEXT = probability > (double)(xrnd() % R) / R;
         if (tmpscore > lastscore || FORCE_NEXT) {
@@ -346,11 +346,11 @@ T maximize_sa_fixedstep (T v, double& refscore, int ecnt, double stemp = 256.0, 
     double lastscore = bestscore;
     const int64_t R = 1000000000;
     for (int ncnt = 0; ncnt < ecnt; ++ncnt) {
-        const double temp = stemp + (etemp - stemp) * (double)(ncnt) / sacnt;
         int a = xrnd() % v.size();////
         int b = xrnd() % v.size();////
         swap(v[a], v[b]);////
         double tmpscore = calcscore(v);
+        const double temp = stemp + (etemp - stemp) * (double)(ncnt) / sacnt;
         const double probability = exp((tmpscore - lastscore) / temp);
         const bool FORCE_NEXT = probability > (double)(xrnd() % R) / R;
         
@@ -382,11 +382,11 @@ T minimize_sa (T v, double& refscore, int etime, double stemp = 256.0, double et
     while (true) {
         ntime = sw.get_milli_time();
         if (ntime >= etime) { break; }
-        const double temp = stemp + (etemp - stemp) * (double)(ntime-stime) / satime;
         int a = xrnd() % v.size();////
         int b = xrnd() % v.size();////
         swap(v[a], v[b]);////
         double tmpscore = calcscore(v);
+        const double temp = stemp + (etemp - stemp) * (double)(ntime-stime) / satime;
         const double probability = exp((lastscore - tmpscore) / temp);
         const bool FORCE_NEXT = probability > (double)(xrnd() % R) / R;
         if (tmpscore < lastscore || FORCE_NEXT) {
@@ -412,11 +412,11 @@ T minimize_sa_fixedstep (T v, double& refscore, int ecnt, double stemp = 256.0, 
     double lastscore = bestscore;
     const int64_t R = 1000000000;
     for (int ncnt = 0; ncnt < ecnt; ++ncnt) {
-        const double temp = stemp + (etemp - stemp) * (double)(ncnt) / sacnt;
         int a = xrnd() % v.size();////
         int b = xrnd() % v.size();////
         swap(v[a], v[b]);////
         double tmpscore = calcscore(v);
+        const double temp = stemp + (etemp - stemp) * (double)(ncnt) / sacnt;
         const double probability = exp((lastscore - tmpscore) / temp);
         const bool FORCE_NEXT = probability > (double)(xrnd() % R) / R;
         if (tmpscore < lastscore || FORCE_NEXT) {
