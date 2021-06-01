@@ -203,7 +203,7 @@ class TopCoderTesterQueue(threading.Thread):
         outerr = p.communicate(timeout=self.op.timeout)
         pout = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
         perr = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
-        cmd = 'vis' + ' ' + fin + ' ' + fout
+        cmd = self.op.crdir + 'vis' + ' ' + fin + ' ' + fout
         jp = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
         outerr = jp.communicate(timeout=self.op.timeout)
         out = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
@@ -215,7 +215,22 @@ class TopCoderTesterQueue(threading.Thread):
             except:
                 pass
         return out + ' ' + err + ' ' + perr
-
+    def atcoder_heuristic_interactive(self):
+        fin = self.fin + str(self.n) + '.txt'
+        fout = self.fout + str(self.n) + '.txt'
+        
+        cmd = ' '.join([self.op.crdir + 'tester', fin, self.cmdpath])
+        p = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
+        outerr = p.communicate(timeout=self.op.timeout)
+        out = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
+        err = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
+        if 'score' not in out.lower():
+            try:
+                float(out)
+                out = 'Score = ' + out
+            except:
+                pass
+        return out + ' ' + err
     def run(self):
         try:
             out = ''
@@ -225,6 +240,7 @@ class TopCoderTesterQueue(threading.Thread):
             if self.op.type == 'half_marathon_interactive_python' : out = self.half_marathon_interactive_python()
             if self.op.type == 'atcoder_heuristic' : out = self.atcoder_heuristic()
             if self.op.type == 'atcoder_heuristic_gen_redirect' : out = self.atcoder_heuristic()
+            if self.op.type == 'atcoder_heuristic_interactive' : out = self.atcoder_heuristic_interactive()
             if self.op.type == 'topcoder_marathon' : out = self.topcoder_marathon()
             
             # print(out)
@@ -515,15 +531,23 @@ def input_file_generate(s, cnt, op):
                 print(cmd)
                 os.system(cmd)
             if op.type == 'atcoder_heuristic':
+                try_mkdir(fin)
                 with open(fin + 'seed.txt', 'w') as f : f.write(str(i))
-                os.system('gen ' + fin + 'seed.txt')
+                os.system(op.crdir + 'gen ' + fin + 'seed.txt')
                 tmpfilepath= fin + '0000.txt'
                 os.rename(tmpfilepath, filepath)
             if op.type == 'atcoder_heuristic_gen_redirect':
+                try_mkdir(fin)
                 tmpfilepath= fin + '0000.txt'
                 with Popen(op.crdir + 'gen', shell=True, stdin=PIPE, stdout=PIPE, stderr=sys.stderr, universal_newlines=True) as p:
                     p.stdin.write(str(i))
                     p.stdin.flush()
+                os.rename(tmpfilepath, filepath)
+            if op.type == 'atcoder_heuristic_interactive':
+                try_mkdir(fin)
+                with open(fin + 'seed.txt', 'w') as f : f.write(str(i))
+                os.system(op.crdir + 'gen ' + fin + 'seed.txt')
+                tmpfilepath= fin + '0000.txt'
                 os.rename(tmpfilepath, filepath)
             os.chdir(tmpcrdir)
     except:
