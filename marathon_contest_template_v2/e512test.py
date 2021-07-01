@@ -197,6 +197,7 @@ class TopCoderTesterQueue(threading.Thread):
         outerr = p.communicate(timeout=self.op.timeout)
         return outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
     def atcoder_heuristic(self):
+        try_mkdir(self.fout)
         fin = self.fin + str(self.n) + '.txt'
         fout = self.fout + str(self.n) + '.txt'
         p = Popen(self.cmdpath + ' < ' + fin + ' > ' + fout, stdout=PIPE, stderr=PIPE, shell=True)
@@ -216,9 +217,9 @@ class TopCoderTesterQueue(threading.Thread):
                 pass
         return out + ' ' + err + ' ' + perr
     def atcoder_heuristic_interactive(self):
+        try_mkdir(self.fout)
         fin = self.fin + str(self.n) + '.txt'
         fout = self.fout + str(self.n) + '.txt'
-        
         cmd = ' '.join([self.op.crdir + 'tester', fin, self.cmdpath])
         p = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
         outerr = p.communicate(timeout=self.op.timeout)
@@ -382,7 +383,7 @@ class Test:
         
         print('this program : ', str(int((r / bestscore) * 1000000)).rjust(7))
         print('read score   : ', str(int((p / bestscore) * 1000000)).rjust(7))
-        if self.op.type == 'atcoder_heuristic' or self.op.type == 'atcoder_heuristic_gen_redirect':
+        if 'atcoder_heuristic' in self.op.type:
             print('50case score : {:,}'.format(int((score / len(self.results)) * 50)))
             print('100case score : {:,}'.format(int((score / len(self.results)) * 100)))
             print('average score',(score / len(self.results)))
