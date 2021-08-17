@@ -290,7 +290,7 @@ template<class T>
 class Random2optSwap {
 public:
     int a, b;
-    Random2optSwap (T& v, int l, int r) {
+    Random2optSwap (T& v, int l, int r) {// left margin size   right margin size
         int t = max(((int)v.size() - l - r), 1);
         this->a = xrnd() % t + l;
         this->b = xrnd() % t + l;
@@ -439,7 +439,7 @@ public:
     MM () { this->sw = StopWatch(); }
     void input () {}
     void output () {}
-    void calc () {}
+    void solve () {}
 };
 
 
@@ -449,7 +449,7 @@ int main () {
     
     MM mm;
     mm.input();
-    mm.calc();
+    mm.solve();
     mm.output();
     
     return 0;
