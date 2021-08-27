@@ -76,7 +76,7 @@ public:
 namespace std {
     template <> class hash<e512pos> {
     public:
-        size_t operator()(const e512pos& t) const{ return hash<int>()(t.x<<16) | hash<int>()(t.y); }
+        size_t operator()(const e512pos& t) const{ return t.x<<16 | t.y; }
     };
 }
 ostream& operator << (ostream& os, const e512pos& p) {
