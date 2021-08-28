@@ -197,7 +197,6 @@ class TopCoderTesterQueue(threading.Thread):
         outerr = p.communicate(timeout=self.op.timeout)
         return outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
     def atcoder_heuristic(self):
-        try_mkdir(self.fout)
         fin = self.fin + str(self.n) + '.txt'
         fout = self.fout + str(self.n) + '.txt'
         p = Popen(self.cmdpath + ' < ' + fin + ' > ' + fout, stdout=PIPE, stderr=PIPE, shell=True)
@@ -217,7 +216,6 @@ class TopCoderTesterQueue(threading.Thread):
                 pass
         return out + ' ' + err + ' ' + perr
     def atcoder_heuristic_interactive(self):
-        try_mkdir(self.fout)
         fin = self.fin + str(self.n) + '.txt'
         fout = self.fout + str(self.n) + '.txt'
         cmd = ' '.join([self.op.crdir + 'tester', fin, self.cmdpath])
@@ -233,6 +231,7 @@ class TopCoderTesterQueue(threading.Thread):
                 pass
         return out + ' ' + err
     def run(self):
+        try_mkdir(self.fout)
         try:
             out = ''
             if self.op.type == 'half_marathon_java' : out = self.half_marathon_java()
@@ -515,7 +514,7 @@ def tree_kill(pid):
 
 def input_file_generate(s, cnt, op):
     fin = op.crdir + 'in/'
-    
+    try_mkdir(fin)
     try:
         for i in range(s, s+cnt):
             filepath = fin + str(i) + '.txt'
@@ -532,20 +531,17 @@ def input_file_generate(s, cnt, op):
                 print(cmd)
                 os.system(cmd)
             if op.type == 'atcoder_heuristic':
-                try_mkdir(fin)
                 with open(fin + 'seed.txt', 'w') as f : f.write(str(i))
                 os.system(op.crdir + 'gen ' + fin + 'seed.txt')
                 tmpfilepath= fin + '0000.txt'
                 os.rename(tmpfilepath, filepath)
             if op.type == 'atcoder_heuristic_gen_redirect':
-                try_mkdir(fin)
                 tmpfilepath= fin + '0000.txt'
                 with Popen(op.crdir + 'gen', shell=True, stdin=PIPE, stdout=PIPE, stderr=sys.stderr, universal_newlines=True) as p:
                     p.stdin.write(str(i))
                     p.stdin.flush()
                 os.rename(tmpfilepath, filepath)
             if op.type == 'atcoder_heuristic_interactive':
-                try_mkdir(fin)
                 with open(fin + 'seed.txt', 'w') as f : f.write(str(i))
                 os.system(op.crdir + 'gen ' + fin + 'seed.txt')
                 tmpfilepath= fin + '0000.txt'
