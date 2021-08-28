@@ -382,10 +382,9 @@ class Test:
         
         print('this program : ', str(int((r / bestscore) * 1000000)).rjust(7))
         print('read score   : ', str(int((p / bestscore) * 1000000)).rjust(7))
-        if 'atcoder_heuristic' in self.op.type:
-            print('50case score : {:,}'.format(int((score / len(self.results)) * 50)))
-            print('100case score : {:,}'.format(int((score / len(self.results)) * 100)))
-            print('average score',(score / len(self.results)))
+        print('50case score : {:,}'.format(int((score / len(self.results)) * 50)))
+        print('100case score : {:,}'.format(int((score / len(self.results)) * 100)))
+        print('average score',(score / len(self.results)))
         
     def result_file_write(self, start_index, testcnt):
         with open(self.op.crdir + 'result' + str(start_index) + '_' + str(testcnt) + '.txt', 'w') as f:
