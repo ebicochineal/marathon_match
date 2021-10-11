@@ -239,6 +239,8 @@ class TopCoderTesterQueue(threading.Thread):
             if self.op.type == 'half_marathon_interactive_java' : out = self.half_marathon_interactive_java()
             if self.op.type == 'half_marathon_interactive_python' : out = self.half_marathon_interactive_python()
             if self.op.type == 'atcoder_heuristic' : out = self.atcoder_heuristic()
+            if self.op.type == 'atcoder_heuristic_b' : out = self.atcoder_heuristic()
+            if self.op.type == 'atcoder_heuristic_c' : out = self.atcoder_heuristic()
             if self.op.type == 'atcoder_heuristic_gen_redirect' : out = self.atcoder_heuristic()
             if self.op.type == 'atcoder_heuristic_interactive' : out = self.atcoder_heuristic_interactive()
             if self.op.type == 'topcoder_marathon' : out = self.topcoder_marathon()
@@ -523,19 +525,31 @@ def input_file_generate(s, cnt, op):
             fin = op.crdir + 'in' + '/'
             if op.type == 'half_marathon_python':
                 cmd = op.py + ' ' + op.crdir + 'generator.py' + ' ' + str(i) + ' > ' + fin + str(i) + '.txt'
-                print(cmd)
+                # print(cmd)
                 os.system(cmd)
             if op.type == 'half_marathon_java':
                 cmd = 'java -cp ' + op.crdir + ' Generator -seed' + str(i) + ' > ' + fin + str(i) + '.txt'
-                print(cmd)
+                # print(cmd)
                 os.system(cmd)
             if op.type == 'atcoder_heuristic':
                 with open(fin + 'seed.txt', 'w') as f : f.write(str(i))
                 os.system(op.crdir + 'gen ' + fin + 'seed.txt')
-                tmpfilepath= fin + '0000.txt'
+                tmpfilepath = fin + '0000.txt'
+                os.rename(tmpfilepath, filepath)
+            if op.type == 'atcoder_heuristic_b':
+                with open(fin + 'seed.txt', 'w') as f : f.write(str(i))
+                finb = op.crdir + 'in_b/'
+                os.system(op.crdir + 'gen_b ' + fin + 'seed.txt')
+                tmpfilepath = finb + '0000.txt'
+                os.rename(tmpfilepath, filepath)
+            if op.type == 'atcoder_heuristic_c':
+                with open(fin + 'seed.txt', 'w') as f : f.write(str(i))
+                finc = op.crdir + 'in_c/'
+                os.system(op.crdir + 'gen_c ' + fin + 'seed.txt')
+                tmpfilepath = finc + '0000.txt'
                 os.rename(tmpfilepath, filepath)
             if op.type == 'atcoder_heuristic_gen_redirect':
-                tmpfilepath= fin + '0000.txt'
+                tmpfilepath = fin + '0000.txt'
                 with Popen(op.crdir + 'gen', shell=True, stdin=PIPE, stdout=PIPE, stderr=sys.stderr, universal_newlines=True) as p:
                     p.stdin.write(str(i))
                     p.stdin.flush()
@@ -543,7 +557,7 @@ def input_file_generate(s, cnt, op):
             if op.type == 'atcoder_heuristic_interactive':
                 with open(fin + 'seed.txt', 'w') as f : f.write(str(i))
                 os.system(op.crdir + 'gen ' + fin + 'seed.txt')
-                tmpfilepath= fin + '0000.txt'
+                tmpfilepath = fin + '0000.txt'
                 os.rename(tmpfilepath, filepath)
             os.chdir(tmpcrdir)
     except:
