@@ -141,6 +141,11 @@ namespace std {
     };
 }
 
+inline int distance (const int ax, const int ay, const int bx, const int by) {
+    return (int)sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
+}
+
+
 class GraphDijkstra {
 private:
     class Node {
@@ -245,202 +250,37 @@ public:
     }
 };
 
-vector<Edge> gridToGraph (vector< vector<int> >& grid) {
-    static const int dx[4] = {0, 0, -1, 1};
-    static const int dy[4] = {-1, 1, 0, 0};
-    
-    vector<Edge> r;
-    int h = grid.size();
-    int w = grid[0].size();
-    for (int y = 0; y < h; ++y) {
-        for (int x = 0; x < w; ++x) {
-            int ax = x;
-            int ay = y;
-            for (int i = 0; i < 4; ++i) {
-                int bx = ax + dx[i];
-                int by = ay + dy[i];
-                if (bx < 0 || bx >= w || by < 0 || by >= h) { continue; }
-                r.emplace_back(Edge(ay*w+ax, by*w+bx, grid[by][bx]));
-            }
-        }
-    }
-    return r;
-}
-
-inline double distance (const double& ax, const double& ay, const double& bx, const double& by) {
-    return sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
-}
-inline double distance (const int& ax, const int& ay, const int& bx, const int& by) {
-    return sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
-}
-inline float distance (const e512pos& a, const e512pos& b) {
-    return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
-}
-
-
-inline bool insidexywh (const int x, const int y, const int w, const int h) {
-    return (0 <= x && x < w && 0 <= y && y < h);
-}
-
-// SA
-template<class T>
-double calcscore (T v) { return 0; }
-
-template<class T>
-class Random2optSwap {
-public:
-    int a, b;
-    Random2optSwap (T& v, int l, int r) {// left margin size   right margin size
-        int t = max(((int)v.size() - l - r), 1);
-        this->a = xrnd() % t + l;
-        this->b = xrnd() % t + l;
-        if (this->a > this->b) { swap(this->a, this->b); }
-        reverse(v.begin()+this->a, v.begin()+this->b+1);
-    }
-    void cancel (T& v) {
-        reverse(v.begin()+this->a, v.begin()+this->b+1);
-    }
-};
-
-template<class T>
-T maximize_sa (T v, double& refscore, int etime, double stemp = 256.0, double etemp = 0.0) {
-    StopWatch sw;
-    int stime = 0;
-    const double satime = etime - stime;
-    int ntime = stime;
-    T bestv = v;
-    double bestscore = calcscore(v);
-    double lastscore = bestscore;
-    const int64_t R = 1000000000;
-    int cnt = 0;
-    while (true) {
-        ntime = sw.get_milli_time();
-        if (ntime >= etime) { break; }
-        int a = xrnd() % v.size();////
-        int b = xrnd() % v.size();////
-        swap(v[a], v[b]);////
-        double tmpscore = calcscore(v);
-        const double temp = stemp + (etemp - stemp) * (double)(ntime-stime) / satime;
-        const double probability = exp((tmpscore - lastscore) / temp);
-        const bool FORCE_NEXT = probability > (double)(xrnd() % R) / R;
-        if (tmpscore > lastscore || FORCE_NEXT) {
-            lastscore = tmpscore;
-            if (tmpscore > bestscore) {
-                bestscore = tmpscore;
-                bestv = v;
-            }
-        } else {
-            swap(v[a], v[b]);
-        }
-        cnt += 1;
-    }
-    refscore = bestscore;
-    return bestv;
-}
-
-template<class T>
-T maximize_sa_fixedstep (T v, double& refscore, int ecnt, double stemp = 256.0, double etemp = 0.0) {
-    const double sacnt = ecnt;
-    T bestv = v;
-    double bestscore = calcscore(v);
-    double lastscore = bestscore;
-    const int64_t R = 1000000000;
-    for (int ncnt = 0; ncnt < ecnt; ++ncnt) {
-        int a = xrnd() % v.size();////
-        int b = xrnd() % v.size();////
-        swap(v[a], v[b]);////
-        double tmpscore = calcscore(v);
-        const double temp = stemp + (etemp - stemp) * (double)(ncnt) / sacnt;
-        const double probability = exp((tmpscore - lastscore) / temp);
-        const bool FORCE_NEXT = probability > (double)(xrnd() % R) / R;
-        
-        if (tmpscore > lastscore || FORCE_NEXT) {
-            lastscore = tmpscore;
-            if (tmpscore > bestscore) {
-                bestscore = tmpscore;
-                bestv = v;
-            }
-        } else {
-            swap(v[a], v[b]);
-        }
-    }
-    refscore = bestscore;
-    return bestv;
-}
-
-template<class T>
-T minimize_sa (T v, double& refscore, int etime, double stemp = 256.0, double etemp = 0.0) {
-    StopWatch sw;
-    int stime = 0;
-    const double satime = etime - stime;
-    int ntime = stime;
-    T bestv = v;
-    double bestscore = calcscore(v);
-    double lastscore = bestscore;
-    const int64_t R = 1000000000;
-    int cnt = 0;
-    while (true) {
-        ntime = sw.get_milli_time();
-        if (ntime >= etime) { break; }
-        int a = xrnd() % v.size();////
-        int b = xrnd() % v.size();////
-        swap(v[a], v[b]);////
-        double tmpscore = calcscore(v);
-        const double temp = stemp + (etemp - stemp) * (double)(ntime-stime) / satime;
-        const double probability = exp((lastscore - tmpscore) / temp);
-        const bool FORCE_NEXT = probability > (double)(xrnd() % R) / R;
-        if (tmpscore < lastscore || FORCE_NEXT) {
-            lastscore = tmpscore;
-            if (tmpscore < bestscore) {
-                bestscore = tmpscore;
-                bestv = v;
-            }
-        } else {
-            swap(v[a], v[b]);
-        }
-        cnt += 1;
-    }
-    refscore = bestscore;
-    return bestv;
-}
-
-template<class T>
-T minimize_sa_fixedstep (T v, double& refscore, int ecnt, double stemp = 256.0, double etemp = 0.0) {
-    const double sacnt = ecnt;
-    T bestv = v;
-    double bestscore = calcscore(v);
-    double lastscore = bestscore;
-    const int64_t R = 1000000000;
-    for (int ncnt = 0; ncnt < ecnt; ++ncnt) {
-        int a = xrnd() % v.size();////
-        int b = xrnd() % v.size();////
-        swap(v[a], v[b]);////
-        double tmpscore = calcscore(v);
-        const double temp = stemp + (etemp - stemp) * (double)(ncnt) / sacnt;
-        const double probability = exp((lastscore - tmpscore) / temp);
-        const bool FORCE_NEXT = probability > (double)(xrnd() % R) / R;
-        if (tmpscore < lastscore || FORCE_NEXT) {
-            lastscore = tmpscore;
-            if (tmpscore < bestscore) {
-                bestscore = tmpscore;
-                bestv = v;
-            }
-        } else {
-            swap(v[a], v[b]);
-        }
-    }
-    refscore = bestscore;
-    return bestv;
-}
 
 class MM {
 public:
     StopWatch sw;
+    const int N = 400;
+    const int M = 1995;
+    int x, y;
+    array<int, 1995> u, v;
+    
+    
+    
     MM () { this->sw = StopWatch(); }
-    void input () {}
+    void input () {
+        cin >> this->x >> this->y;
+        for (int i = 0; i < this->M; ++i) {
+            cin >> this->u[i] >> this->v[i];
+        }
+        
+        for (int i = 0; i < this->M; ++i) {
+            int t;
+            cin >> t;
+            cout << 1 << endl;
+            cout.flush();
+        }
+        
+        
+    }
     void output () {}
     void solve () {}
 };
+
 
 int main () {
     cin.tie(0);

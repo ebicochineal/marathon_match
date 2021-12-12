@@ -18,6 +18,8 @@
 #include <unordered_map>
 #include <time.h>
 #include <sys/timeb.h>
+
+#include <bitset>
 using namespace std;
 
 template<class F, class S> string in_v_to_str (const pair<F, S> v);
@@ -76,7 +78,7 @@ public:
 namespace std {
     template <> class hash<e512pos> {
     public:
-        size_t operator()(const e512pos& t) const{ return t.x<<16 | t.y; }
+        size_t operator()(const e512pos& t) const{ return hash<int>()(t.x<<16) | hash<int>()(t.y); }
     };
 }
 ostream& operator << (ostream& os, const e512pos& p) {
@@ -245,21 +247,23 @@ public:
     }
 };
 
-vector<Edge> gridToGraph (vector< vector<int> >& grid) {
+vector<Edge> gridToGraph (array< array<int, 70>, 70>& grid, int N) {
     static const int dx[4] = {0, 0, -1, 1};
     static const int dy[4] = {-1, 1, 0, 0};
     
     vector<Edge> r;
-    int h = grid.size();
-    int w = grid[0].size();
+    int h = N;
+    int w = N;
     for (int y = 0; y < h; ++y) {
         for (int x = 0; x < w; ++x) {
             int ax = x;
             int ay = y;
+            if (grid[ay][ax] < 0) { continue; }
             for (int i = 0; i < 4; ++i) {
                 int bx = ax + dx[i];
                 int by = ay + dy[i];
                 if (bx < 0 || bx >= w || by < 0 || by >= h) { continue; }
+                if (grid[by][bx] < 0) { continue; }
                 r.emplace_back(Edge(ay*w+ax, by*w+bx, grid[by][bx]));
             }
         }
@@ -267,180 +271,154 @@ vector<Edge> gridToGraph (vector< vector<int> >& grid) {
     return r;
 }
 
-inline double distance (const double& ax, const double& ay, const double& bx, const double& by) {
-    return sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
-}
-inline double distance (const int& ax, const int& ay, const int& bx, const int& by) {
-    return sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
-}
-inline float distance (const e512pos& a, const e512pos& b) {
-    return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
-}
-
-
 inline bool insidexywh (const int x, const int y, const int w, const int h) {
     return (0 <= x && x < w && 0 <= y && y < h);
 }
 
-// SA
-template<class T>
-double calcscore (T v) { return 0; }
-
-template<class T>
-class Random2optSwap {
-public:
-    int a, b;
-    Random2optSwap (T& v, int l, int r) {// left margin size   right margin size
-        int t = max(((int)v.size() - l - r), 1);
-        this->a = xrnd() % t + l;
-        this->b = xrnd() % t + l;
-        if (this->a > this->b) { swap(this->a, this->b); }
-        reverse(v.begin()+this->a, v.begin()+this->b+1);
+struct ABC {
+    int a, b, c;
+    ABC (int a, int b, int c) {
+        this->a = a;
+        this->b = b;
+        this->c = c;
     }
-    void cancel (T& v) {
-        reverse(v.begin()+this->a, v.begin()+this->b+1);
-    }
+    
 };
-
-template<class T>
-T maximize_sa (T v, double& refscore, int etime, double stemp = 256.0, double etemp = 0.0) {
-    StopWatch sw;
-    int stime = 0;
-    const double satime = etime - stime;
-    int ntime = stime;
-    T bestv = v;
-    double bestscore = calcscore(v);
-    double lastscore = bestscore;
-    const int64_t R = 1000000000;
-    int cnt = 0;
-    while (true) {
-        ntime = sw.get_milli_time();
-        if (ntime >= etime) { break; }
-        int a = xrnd() % v.size();////
-        int b = xrnd() % v.size();////
-        swap(v[a], v[b]);////
-        double tmpscore = calcscore(v);
-        const double temp = stemp + (etemp - stemp) * (double)(ntime-stime) / satime;
-        const double probability = exp((tmpscore - lastscore) / temp);
-        const bool FORCE_NEXT = probability > (double)(xrnd() % R) / R;
-        if (tmpscore > lastscore || FORCE_NEXT) {
-            lastscore = tmpscore;
-            if (tmpscore > bestscore) {
-                bestscore = tmpscore;
-                bestv = v;
-            }
-        } else {
-            swap(v[a], v[b]);
-        }
-        cnt += 1;
-    }
-    refscore = bestscore;
-    return bestv;
-}
-
-template<class T>
-T maximize_sa_fixedstep (T v, double& refscore, int ecnt, double stemp = 256.0, double etemp = 0.0) {
-    const double sacnt = ecnt;
-    T bestv = v;
-    double bestscore = calcscore(v);
-    double lastscore = bestscore;
-    const int64_t R = 1000000000;
-    for (int ncnt = 0; ncnt < ecnt; ++ncnt) {
-        int a = xrnd() % v.size();////
-        int b = xrnd() % v.size();////
-        swap(v[a], v[b]);////
-        double tmpscore = calcscore(v);
-        const double temp = stemp + (etemp - stemp) * (double)(ncnt) / sacnt;
-        const double probability = exp((tmpscore - lastscore) / temp);
-        const bool FORCE_NEXT = probability > (double)(xrnd() % R) / R;
-        
-        if (tmpscore > lastscore || FORCE_NEXT) {
-            lastscore = tmpscore;
-            if (tmpscore > bestscore) {
-                bestscore = tmpscore;
-                bestv = v;
-            }
-        } else {
-            swap(v[a], v[b]);
-        }
-    }
-    refscore = bestscore;
-    return bestv;
-}
-
-template<class T>
-T minimize_sa (T v, double& refscore, int etime, double stemp = 256.0, double etemp = 0.0) {
-    StopWatch sw;
-    int stime = 0;
-    const double satime = etime - stime;
-    int ntime = stime;
-    T bestv = v;
-    double bestscore = calcscore(v);
-    double lastscore = bestscore;
-    const int64_t R = 1000000000;
-    int cnt = 0;
-    while (true) {
-        ntime = sw.get_milli_time();
-        if (ntime >= etime) { break; }
-        int a = xrnd() % v.size();////
-        int b = xrnd() % v.size();////
-        swap(v[a], v[b]);////
-        double tmpscore = calcscore(v);
-        const double temp = stemp + (etemp - stemp) * (double)(ntime-stime) / satime;
-        const double probability = exp((lastscore - tmpscore) / temp);
-        const bool FORCE_NEXT = probability > (double)(xrnd() % R) / R;
-        if (tmpscore < lastscore || FORCE_NEXT) {
-            lastscore = tmpscore;
-            if (tmpscore < bestscore) {
-                bestscore = tmpscore;
-                bestv = v;
-            }
-        } else {
-            swap(v[a], v[b]);
-        }
-        cnt += 1;
-    }
-    refscore = bestscore;
-    return bestv;
-}
-
-template<class T>
-T minimize_sa_fixedstep (T v, double& refscore, int ecnt, double stemp = 256.0, double etemp = 0.0) {
-    const double sacnt = ecnt;
-    T bestv = v;
-    double bestscore = calcscore(v);
-    double lastscore = bestscore;
-    const int64_t R = 1000000000;
-    for (int ncnt = 0; ncnt < ecnt; ++ncnt) {
-        int a = xrnd() % v.size();////
-        int b = xrnd() % v.size();////
-        swap(v[a], v[b]);////
-        double tmpscore = calcscore(v);
-        const double temp = stemp + (etemp - stemp) * (double)(ncnt) / sacnt;
-        const double probability = exp((lastscore - tmpscore) / temp);
-        const bool FORCE_NEXT = probability > (double)(xrnd() % R) / R;
-        if (tmpscore < lastscore || FORCE_NEXT) {
-            lastscore = tmpscore;
-            if (tmpscore < bestscore) {
-                bestscore = tmpscore;
-                bestv = v;
-            }
-        } else {
-            swap(v[a], v[b]);
-        }
-    }
-    refscore = bestscore;
-    return bestv;
-}
 
 class MM {
 public:
     StopWatch sw;
+    int N, SX, SY;
+    array< array<int, 70>, 70> grid;
     MM () { this->sw = StopWatch(); }
-    void input () {}
-    void output () {}
-    void solve () {}
+    vector<int> bestret;
+    void input () {
+        cin >> this->N >> this->SY >> this->SX;
+        for (int y = 0; y < this->N; ++y) {
+            for (int x = 0; x < this->N; ++x) {
+                char c;
+                cin >> c;
+                if (c == '#') {
+                    this->grid[y][x] = -1;
+                } else {
+                    this->grid[y][x] = c - '0';
+                }
+            }
+        }
+        
+    }
+    
+    void output () {
+        static const string d = "URDL";
+        string s = "";
+        for (auto&& i : this->bestret) {
+            s += d[i];
+        }
+        pdebug(this->sw.get_milli_time());
+        cout << s << endl;
+    }
+    void solve () {
+        static const int dx[4] = {0, 0, -1, 1};
+        static const int dy[4] = {-1, 1, 0, 0};
+        vector<Edge> ed = gridToGraph(this->grid, this->N);
+        GraphDijkstra gd(ed, true);
+        vector<int> pos;
+        for (int y = 0; y < this->N; ++y) {
+            for (int x = 0; x < this->N; ++x) {
+                if (this->grid[y][x] < 0) { continue; }
+                bool v = false;
+                bool h = false;
+                for (int i = 0; i < 2; ++i) {
+                    int px = x + dx[i];
+                    int py = y + dy[i];
+                    if (insidexywh(px, py, this->N, this->N) && this->grid[py][px] > -1) { v = true; }
+                }
+                for (int i = 2; i < 4; ++i) {
+                    int px = x + dx[i];
+                    int py = y + dy[i];
+                    if (insidexywh(px, py, this->N, this->N) && this->grid[py][px] > -1) { h = true; }
+                }
+                if (v && h && !(x == this->SX && y == this->SY)) {
+                    pos.emplace_back(y * this->N + x);
+                }
+            }
+        }
+        int sp = this->SY * this->N + this->SX;
+        vector<ABC> a_b_cost;
+        for (auto&& i : pos) {
+            gd.calcPath(sp, i);
+            a_b_cost.emplace_back(sp, i, gd.pathcost);
+        }
+        for (auto&& i : pos) {
+            gd.calcPath(i, sp);
+            a_b_cost.emplace_back(i, sp, gd.pathcost);
+        }
+        for (int i = 0; i < pos.size(); ++i) {
+            for (int j = 0; j < pos.size(); ++j) {
+                if (i != j) {
+                    gd.calcPath(pos[i], pos[j]);
+                    a_b_cost.emplace_back(pos[i], pos[j], gd.pathcost);
+                }
+            }
+        }
+        
+        vector<int> path;
+        int p = sp;
+        
+        for (int i = 0; i < pos.size(); ++i) {
+            gd.calcPath(p, pos[i]);
+            this->addPath(gd.path, path);
+            p = pos[i];
+        }
+        gd.calcPath(p, sp);
+        this->addPath(gd.path, path);
+        
+        
+        this->bestret = path;
+        
+        // for (int y = 0; y < N; ++y) {
+        //     string s = "";
+        //     for (int x = 0; x < N; ++x) {
+        //         if (SX==x&&SY==y) {
+        //             s += "*";
+        //         } else {
+        //             s += grid[y][x] < 0 ? "#" : " ";
+                    
+        //         }
+        //     }
+        //     fdebug(s);
+        // }
+        
+        
+    }
+    
+    void addPath (vector<int>& path, vector<int>& ret) {
+        //static const string d = "URDL";
+        int px = path[0] % this->N;
+        int py = path[0] / this->N;
+        for (int j = 1; j < path.size(); ++j) {
+            int i = path[j];
+            int bx = i % this->N;
+            int by = i / this->N;
+            if (by < py) {
+                ret.emplace_back(0);
+            } else if (bx > px) {
+                ret.emplace_back(1); }
+            else if (by > py) {
+                ret.emplace_back(2);
+            } else if (bx < px) {
+                ret.emplace_back(3);
+            }
+            px = bx;
+            py = by;
+        }
+        
+        
+        
+    }
+    
 };
+
 
 int main () {
     cin.tie(0);
@@ -450,6 +428,7 @@ int main () {
     mm.input();
     mm.solve();
     mm.output();
+    
     cout.flush();
     return 0;
 }

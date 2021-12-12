@@ -94,6 +94,8 @@ class Option:
         for i in self.ops:
             if '-maxthread' in i:
                 self.maxthread = int(i[10:])
+            elif '-mt' in i:
+                self.maxthread = int(i[3:])
             elif '-sample' in i:
                 self.source = 'sample.cpp'
             else:
