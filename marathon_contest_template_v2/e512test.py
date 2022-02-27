@@ -232,6 +232,21 @@ class TopCoderTesterQueue(threading.Thread):
             except:
                 pass
         return out + ' ' + err
+    def atcoder_heuristic_interactive2(self):
+        fin = self.fin + str(self.n) + '.txt'
+        fout = self.fout + str(self.n) + '.txt'
+        cmd = ' '.join([self.op.crdir + 'tester', self.cmdpath, '<', fin, '>', fout])
+        p = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
+        outerr = p.communicate(timeout=self.op.timeout)
+        out = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
+        err = outerr[1].decode('shift-jis').replace('\r\n', '\n').strip()
+        if 'score' not in out.lower():
+            try:
+                float(out)
+                out = 'Score = ' + out
+            except:
+                pass
+        return out + ' ' + err
     def run(self):
         try_mkdir(self.fout)
         try:
@@ -245,6 +260,7 @@ class TopCoderTesterQueue(threading.Thread):
             if self.op.type == 'atcoder_heuristic_c' : out = self.atcoder_heuristic()
             if self.op.type == 'atcoder_heuristic_gen_redirect' : out = self.atcoder_heuristic()
             if self.op.type == 'atcoder_heuristic_interactive' : out = self.atcoder_heuristic_interactive()
+            if self.op.type == 'atcoder_heuristic_interactive2' : out = self.atcoder_heuristic_interactive2()
             if self.op.type == 'topcoder_marathon' : out = self.topcoder_marathon()
             
             # print(out)
@@ -556,7 +572,7 @@ def input_file_generate(s, cnt, op):
                     p.stdin.write(str(i))
                     p.stdin.flush()
                 os.rename(tmpfilepath, filepath)
-            if op.type == 'atcoder_heuristic_interactive':
+            if 'atcoder_heuristic_interactive' in op.type:
                 with open(fin + 'seed.txt', 'w') as f : f.write(str(i))
                 os.system(op.crdir + 'gen ' + fin + 'seed.txt')
                 tmpfilepath = fin + '0000.txt'
