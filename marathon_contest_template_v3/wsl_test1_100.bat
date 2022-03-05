@@ -1,0 +1,1 @@
+cmd /k wsl python3 e512test.py 1 100 -maxthread1
