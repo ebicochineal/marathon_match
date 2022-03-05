@@ -30,6 +30,10 @@ e512test.pyの設定
 コンパイルオプション  
 ビジュアライザオプション  
 
+## in_files_rename
+対象 ファイル名に数字が入っているテキストファイル  
+./in/input0001.txt -> ./in/1.txt
+
 ## test1_1.bat
 ```cmd /k e512test.py 1 1 -maxthread1```
 ## wsl_test1_1.bat

@@ -34,6 +34,7 @@ class Option:
         self.testercmd = []
         self.gencmd = []
         self.score_keyword = []
+        self.fullpath = []
         
         if len(sys.argv) > 1:
             self.start = int(sys.argv[1])
@@ -96,6 +97,8 @@ class Option:
                             self.gencmd += [s]
                         if mode == '[score_keyword]':
                             self.score_keyword += [s]
+                        if mode == '[fullpath]':
+                            self.fullpath += [s]
         tmp = []
         for i in self.ops:
             if '-maxthread' in i:
@@ -149,12 +152,9 @@ class TopCoderTesterQueue(threading.Thread):
         fin = self.fin + str(self.n) + '.txt'
         fout = self.fout + str(self.n) + '.txt'
         d = {}
-        for i in ['vis']:
-            d[i] = self.op.crdir + 'vis'
-        for i in ['tester']:
-            d[i] = self.op.crdir + 'tester'
-        for i in ['tester.jar']:
-            d[i] = self.op.crdir + 'tester.jar'
+        
+        for i in self.op.fullpath:
+            d[i] = self.op.crdir + i
         for i in ['in.txt', 'in']:
             d[i] = fin
         for i in ['out.txt', 'out']:
@@ -181,7 +181,7 @@ class TopCoderTesterQueue(threading.Thread):
         result = ''
         for cmd in self.op.testercmd:
             cmd = self.cmd_replace(cmd)
-            print(cmd)
+            # print(cmd)
             p = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
             outerr = p.communicate()
             out = outerr[0].decode('utf-8').replace('\r\n', '\n').strip()
@@ -201,7 +201,7 @@ class TopCoderTesterQueue(threading.Thread):
             
             spstr = self.op.score_keyword
             
-            print(spstr)
+            # print(spstr)
             
             sp = ':'
             for i in spstr:
@@ -465,8 +465,9 @@ def tree_kill(pid):
         os.kill(pid, signal.SIGTERM)
 def cmd_replace(op, s):
         d = {}
-        for i in ['gen']:
-            d[i] = op.crdir + 'gen'
+        
+        for i in op.fullpath:
+            d[i] = op.crdir + i
         for i in ['seeds.txt']:
             d[i] = op.crdir + 'in/' + 'seeds.txt'
         l = []
