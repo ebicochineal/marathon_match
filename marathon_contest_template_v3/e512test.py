@@ -42,6 +42,10 @@ class Option:
         if len(sys.argv) > 3:
             self.ops = sys.argv[3:]
         
+        yvis = '-vis' in self.ops
+        if yvis : self.ops = [x for x in self.ops if x != '-vis']
+        
+        
         sp = ';'
         if 'win' in sys.platform and 'darwin' != sys.platform:
             self.cls = 'cls'
@@ -92,6 +96,7 @@ class Option:
                         if mode == '[type]':
                             self.type = s
                         if mode == '[testercmd]':
+                            if yvis : s = s.replace(' -novis', '')
                             self.testercmd += [s]
                         if mode == '[gencmd]':
                             self.gencmd += [s]
