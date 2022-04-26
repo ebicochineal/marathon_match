@@ -23,9 +23,6 @@ class Option:
         self.compare = 'greater'
         self.errtag = 'no'
         self.os = 'win'
-        self.py = 'py'
-        self.java = 'java'
-        self.type = ''
         
         self.start = 1
         self.testcnt = 100
@@ -87,14 +84,6 @@ class Option:
                             self.errtag = s
                         if mode == '[visoption]':
                             self.ops += [s]
-                        if mode == '[python]':
-                            lang, cmd = map(lambda x : x.strip(), s.split(':', 1))
-                            lang : self.py = cmd.split()
-                        if mode == '[java]':
-                            lang, cmd = map(lambda x : x.strip(), s.split(':', 1))
-                            lang : self.java = cmd.split()
-                        if mode == '[type]':
-                            self.type = s
                         if mode == '[testercmd]':
                             if yvis : s = s.replace(' -novis', '')
                             self.testercmd += [s]
