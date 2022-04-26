@@ -160,9 +160,9 @@ class TopCoderTesterQueue(threading.Thread):
         
         for i in self.op.fullpath:
             d[i] = self.op.crdir + i
-        for i in ['in.txt', 'in', 'input.txt']:
+        for i in ['in.txt', 'in']:
             d[i] = fin
-        for i in ['out.txt', 'out', 'output.txt']:
+        for i in ['out.txt', 'out']:
             d[i] = fout
         for i in ['<seed>']:
             d[i] = str(self.n)
@@ -468,18 +468,13 @@ def tree_kill(pid):
             except:
                 pass
         os.kill(pid, signal.SIGTERM)
-def cmd_replace(op, s, n, fin):
-        nfin = fin + str(n) + '.txt'
+def cmd_replace(op, s):
         d = {}
         
-        for i in ['in.txt', 'in', 'input.txt']:
-            d[i] = nfin
         for i in op.fullpath:
             d[i] = op.crdir + i
         for i in ['seeds.txt']:
             d[i] = op.crdir + 'in/' + 'seeds.txt'
-        for i in ['<seed>', 'seed']:
-            d[i] = str(n)
         l = []
         for i in s.split():
             if i in d:
@@ -507,7 +502,7 @@ def input_file_generate(s, cnt, op):
                 elif cmd == '<create seeds.txt>':
                     with open(fin + 'seeds.txt', 'w') as f : f.write(str(i))
                 else:
-                    cmd = cmd_replace(op, cmd, seed, fin)
+                    cmd = cmd_replace(op, cmd)
                     # print(cmd)
                     os.system(cmd)
             os.chdir(tmpcrdir)

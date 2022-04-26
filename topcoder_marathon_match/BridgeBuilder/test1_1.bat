@@ -1,0 +1,1 @@
+cmd /k e512test.py 1 1 -maxthread1
