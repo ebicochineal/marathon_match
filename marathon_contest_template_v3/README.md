@@ -45,7 +45,7 @@ submitfiles_to_zipfile.py ファイルパス（省略可）
 
 
 ## ahcwvis-output-to-json-0-50.py
-0-50のoutputファイルをjsonにまとめる  
+Seed 0から50ケースのoutputファイルをjsonにまとめる  
 ## ahcwvis-tampermonkey-userscript.js
 AHC Web版ヴィジュアライザのOutput:の隣あたりにFileボタンを追加  
 jsonを読み込みシードごとにoutputを張り付ける  
