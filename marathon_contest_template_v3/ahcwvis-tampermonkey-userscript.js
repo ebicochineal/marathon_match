@@ -4,7 +4,7 @@
 // @version      0.1
 // @description  -
 // @author       ebicochineal
-// @match        https://img.atcoder.jp/ahc*
+// @match        https://img.atcoder.jp/*
 // @grant        none
 // ==/UserScript==
 
