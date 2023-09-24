@@ -39,7 +39,7 @@ e512test.pyの設定
 ## wsl_test1_1.bat
 ```cmd /k wsl python3 e512test.py 1 1 -maxthread1```
 
-## submitfiles_to_sipfile.py
+## submitfiles_to_zipfile.py
 topcoder提出zip作成スクリプト  
 submitfiles_to_zipfile.py ファイルパス（省略可）  
 
