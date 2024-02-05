@@ -1,1 +1,0 @@
-image num % 10
