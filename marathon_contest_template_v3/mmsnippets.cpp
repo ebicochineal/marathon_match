@@ -329,6 +329,376 @@ vector<Edge> gridToGraph (vector< vector<int> >& grid) {
     return r;
 }
 
+
+struct E512Grid {
+    vector<int> grid;
+    int W, H;
+    E512Grid (int W, int H) { this->init(W, H); }
+    E512Grid (int N) { this->init(N, N); }
+    void init (int W, int H) {
+        this->W = W;
+        this->H = H;
+        this->grid = vector<int>(this->W*this->H, 0);
+    }
+    int getIndex (int x, int y) { return y*this->W+x; }
+    int getValue (int x, int y) { return this->grid[y*this->W+x]; }
+    bool inSide (int x, int y) { return (x >= 0 && x < this->W && y >= 0 && y < this->H); }
+    void input () {
+        for (int y = 0; y < this->H; ++y) {
+            for (int x = 0; x < this->W; ++x) {
+                cin >> this->grid[y*this->W+x];
+            }
+        }
+    }
+    void inputNoSplit () {
+        for (int y = 0; y < this->H; ++y) {
+            string t;
+            cin >> t;
+            for (int x = 0; x < this->W; ++x) {
+                this->grid[y*this->W+x] = (int)(t[x]-'0');
+            }
+        }
+    }
+    void randomFill (int minvalue, int maxvalue) {
+        int d = abs(maxvalue-minvalue)+1;
+        for (int y = 0; y < this->H; ++y) {
+            for (int x = 0; x < this->W; ++x) {
+                this->grid[y*this->W+x] = xrnd()%d+minvalue;
+            }
+        }
+    }
+    string toStringNoSplit () {
+        string r;
+        for (int y = 0; y < this->H; ++y) {
+            for (int x = 0; x < this->W; ++x) {
+                r += to_string(this->grid[y*this->W+x]);
+            }
+            if (y != this->H-1) { r += '\n'; }
+        }
+        return r;
+    }
+    string toStringPathGridNoSplit (vector<int>& path) {
+        string r;
+        vector<int> m = vector<int>(this->grid.size(), 0);
+        for (auto&& i : path) { m[i] = 1; }
+        
+        for (int y = 0; y < this->H; ++y) {
+            for (int x = 0; x < this->W; ++x) {
+                r += m[y*this->W+x] == 1 ? '+' : '.';
+            }
+            if (y != this->H-1) { r += '\n'; }
+        }
+        return r;
+    }
+    string toStringPathGridNoSplit (vector<int>& path, int wall) {
+        string r;
+        vector<int> m = vector<int>(this->grid.size(), 0);
+        for (auto&& i : path) { m[i] = 1; }
+        
+        for (int y = 0; y < this->H; ++y) {
+            for (int x = 0; x < this->W; ++x) {
+                r += (this->grid[y*this->W+x] == wall ? '#' : (m[y*this->W+x] == 1 ? '+' : '.'));
+            }
+            if (y != this->H-1) { r += '\n'; }
+        }
+        return r;
+    }
+    
+    string toStringWallGrid (E512Grid& horizontal, E512Grid& vertical) {
+        vector< vector<char> > g = vector< vector<char> >(this->H, vector<char>(this->W*2-1, ' '));
+        for (int y = 0; y < this->H; ++y) {
+            for (int x = 0; x < this->W-1; ++x) {
+                if (horizontal.getValue(x, y) == 1) { g[y][x*2+1] = '|'; }
+            }
+        }
+        for (int y = 0; y < this->H; ++y) {
+            for (int x = 0; x < this->W; ++x) {
+                if (vertical.getValue(x, y) == 1) { g[y][x*2] = '_'; }
+            }
+        }
+        string r;
+        for (int x = 0; x < this->W*2+1; ++x) { r += '#'; }
+        r += '\n';
+        for (int y = 0; y < this->H; ++y) {
+            r += '#';
+            for (int x = 0; x < this->W*2-1; ++x) {
+                r += g[y][x];
+            }
+            r += "#\n";
+        }
+        for (int x = 0; x < this->W*2+1; ++x) { r += '#'; }
+        return r;
+    }
+    
+};
+ostream& operator << (ostream& os, const E512Grid& p) {
+    for (int y = 0; y < p.H; ++y) {
+        for (int x = 0; x < p.W; ++x) {
+            os << to_string(p.grid[y*p.W+x]);
+            if (x != p.W-1) { os << ' '; }
+        }
+        if (y != p.H-1) { os << '\n'; }
+    }
+    return os;
+};
+
+struct E512GridUtils {
+    static vector<int> findValueIndexes (E512Grid& g, int target) {
+        vector<int> r;
+        for (int i = 0; i < g.grid.size(); ++i) {
+            if (g.grid[i] == target) { r.emplace_back(i); }
+        }
+        return r;
+    }
+    
+    static vector<Edge> getEdges (E512Grid& g) {
+        vector<Edge> e;
+        for (int y = 0; y < g.H; ++y) {
+            for (int x = 0; x < g.W; ++x) {
+                int a = y*g.W+x;
+                if (y-1 >=  0) { e.emplace_back(a, (y-1)*g.W+x, 1); }
+                if (x+1 < g.W) { e.emplace_back(a, y*g.W+(x+1), 1); }
+                if (y+1 < g.H) { e.emplace_back(a, (y+1)*g.W+x, 1); }
+                if (x-1 >=  0) { e.emplace_back(a, y*g.W+(x-1), 1); }
+            }
+        }
+        return e;
+    }
+    
+    static vector<Edge> getEdges (E512Grid& g, int wall) {
+        vector<Edge> e;
+        for (int y = 0; y < g.H; ++y) {
+            for (int x = 0; x < g.W; ++x) {
+                int a = y*g.W+x;
+                int b;
+                if (y-1 >=  0) { b = (y-1)*g.W+x; if (g.grid[a] != wall && g.grid[b] != wall) { e.emplace_back(a, b, 1); } }
+                if (x+1 < g.W) { b = y*g.W+(x+1); if (g.grid[a] != wall && g.grid[b] != wall) { e.emplace_back(a, b, 1); } }
+                if (y+1 < g.H) { b = (y+1)*g.W+x; if (g.grid[a] != wall && g.grid[b] != wall) { e.emplace_back(a, b, 1); } }
+                if (x-1 >=  0) { b = y*g.W+(x-1); if (g.grid[a] != wall && g.grid[b] != wall) { e.emplace_back(a, b, 1); } }
+            }
+        }
+        return e;
+    }
+    
+    static vector<Edge> getEdges (E512Grid& g, E512Grid& horizontal, E512Grid& vertical) {
+        vector<Edge> e;
+        for (int y = 0; y < g.H; ++y) {
+            for (int x = 0; x < g.W; ++x) {
+                int a = y*g.W+x;
+                if (y-1 >=  0 &&   vertical.getValue(x, y-1) == 0) { e.emplace_back(a, (y-1)*g.W+x, 1); }
+                if (x+1 < g.W &&   horizontal.getValue(x, y) == 0) { e.emplace_back(a, y*g.W+(x+1), 1); }
+                if (y+1 < g.H &&     vertical.getValue(x, y) == 0) { e.emplace_back(a, (y+1)*g.W+x, 1); }
+                if (x-1 >=  0 && horizontal.getValue(x-1, y) == 0) { e.emplace_back(a, y*g.W+(x-1), 1); }
+            }
+        }
+        return e;
+    }
+    
+    static void setEdgeCost (E512Grid& g, vector<Edge>& e) {
+        for (auto&& i : e) { i.cost = g.grid[i.b]; }
+    }
+    
+    static vector<Edge> getCostEdges (E512Grid& g) {
+        vector<Edge> e = E512GridUtils::getEdges(g);
+        E512GridUtils::setEdgeCost(g, e);
+        return e;
+    }
+    static vector<Edge> getCostEdges (E512Grid& g, int wall) {
+        vector<Edge> e = E512GridUtils::getEdges(g, wall);
+        E512GridUtils::setEdgeCost(g, e);
+        return e;
+    }
+    static vector<Edge> getCostEdges (E512Grid& g, E512Grid& horizontal, E512Grid& vertical) {
+        vector<Edge> e = E512GridUtils::getEdges(g, horizontal, vertical);
+        E512GridUtils::setEdgeCost(g, e);
+        return e;
+    }
+    
+    static void rotateRight (E512Grid& g) {
+        if (g.W != g.H) { return; }
+        int n = g.W;
+        vector<int> v = g.grid;
+        for (int y = 0; y < n; ++y) {
+            for (int x = 0; x < n; ++x) {
+                int rx = n-1-y;
+                int ry = x;
+                g.grid[ry*n+rx] = v[y*n+x];
+            }
+        }
+    }
+    static void rotateLeft (E512Grid& g) {
+        if (g.W != g.H) { return; }
+        int n = g.W;
+        vector<int> v = g.grid;
+        for (int y = 0; y < n; ++y) {
+            for (int x = 0; x < n; ++x) {
+                int rx = y;
+                int ry = n-1-x;
+                g.grid[ry*n+rx] = v[y*n+x];
+            }
+        }
+    }
+    
+    static void dropDown (E512Grid& g, int ignore = 0) {
+        for (int x = 0; x < g.W; ++x) {
+            int d = g.H-1;
+            for (int y = 0; y < g.H; ++y) {
+                if (g.grid[(g.H-y-1)*g.W+x] == ignore) {
+                } else {
+                    swap(g.grid[(g.H-y-1)*g.W+x], g.grid[d*g.W+x]);
+                    d -= 1;
+                }
+            }
+        }
+    }
+    
+    static bool canMove (int ax, int ay, int bx, int by, E512Grid& g, E512Grid& horizontal, E512Grid& vertical) {
+        if (!g.inSide(bx, by)) { return false; }
+        if (by < ay) { return (  vertical.getValue(bx, by) == 0); }
+        if (bx > ax) { return (horizontal.getValue(ax, by) == 0); }
+        if (by > ay) { return (  vertical.getValue(bx, ay) == 0); }
+        if (bx < ax) { return (horizontal.getValue(bx, by) == 0); }
+        return true;
+    }
+    
+    static vector<int> group (E512Grid& g, int x, int y) {
+        static const int dx[4] = {0, 1, 0, -1};
+        static const int dy[4] = {-1, 0, 1, 0};
+        static vector<e512pos> v;
+        
+        vector<int> e = vector<int>(g.grid.size(), 0);
+        vector< vector<int> > r;
+        
+        int a = g.getIndex(x, y);
+        e[a] = 1;
+        vector<int> u;
+        u.emplace_back(a);
+        v.clear();
+        v.emplace_back(x, y);
+        while (v.size() > 0) {
+            e512pos p = v.back();
+            v.pop_back();
+            for (int d = 0; d < 4; ++d) {
+                int nx = p.x + dx[d];
+                int ny = p.y + dy[d];
+                int b = g.getIndex(nx, ny);
+                if (!g.inSide(nx, ny)) { continue; }
+                if (g.grid[b] != g.grid[a]) { continue; }
+                if (e[b] == 1) { continue; }
+                e[b] = 1;
+                u.emplace_back(b);
+                v.emplace_back(nx, ny);
+            }
+        }
+        return u;
+    }
+    static vector< vector<int> > groupLists (E512Grid& g) {
+        static const int dx[4] = {0, 1, 0, -1};
+        static const int dy[4] = {-1, 0, 1, 0};
+        static vector<e512pos> v;
+        
+        vector<int> e = vector<int>(g.grid.size(), 0);
+        vector< vector<int> > r;
+        for (int y = 0; y < g.H; ++y) {
+            for (int x = 0; x < g.W; ++x) {
+                int a = g.getIndex(x, y);
+                if (e[a] == 1) { continue; }
+                e[a] = 1;
+                vector<int> u;
+                u.emplace_back(a);
+                v.clear();
+                v.emplace_back(x, y);
+                while (v.size() > 0) {
+                    e512pos p = v.back();
+                    v.pop_back();
+                    for (int d = 0; d < 4; ++d) {
+                        int nx = p.x + dx[d];
+                        int ny = p.y + dy[d];
+                        int b = g.getIndex(nx, ny);
+                        if (!g.inSide(nx, ny)) { continue; }
+                        if (g.grid[b] != g.grid[a]) { continue; }
+                        if (e[b] == 1) { continue; }
+                        e[b] = 1;
+                        u.emplace_back(b);
+                        v.emplace_back(nx, ny);
+                    }
+                }
+                r.emplace_back(u);
+            }
+        }
+        return r;
+    }
+    
+    static vector<int> group (E512Grid& g, int x, int y, E512Grid& horizontal, E512Grid& vertical) {
+        static const int dx[4] = {0, 1, 0, -1};
+        static const int dy[4] = {-1, 0, 1, 0};
+        static vector<e512pos> v;
+        
+        vector<int> e = vector<int>(g.grid.size(), 0);
+        vector< vector<int> > r;
+        
+        int a = g.getIndex(x, y);
+        e[a] = 1;
+        vector<int> u;
+        u.emplace_back(a);
+        v.clear();
+        v.emplace_back(x, y);
+        while (v.size() > 0) {
+            e512pos p = v.back();
+            v.pop_back();
+            for (int d = 0; d < 4; ++d) {
+                int nx = p.x + dx[d];
+                int ny = p.y + dy[d];
+                int b = g.getIndex(nx, ny);
+                if (!E512GridUtils::canMove(p.x, p.y, nx, ny, g, horizontal, vertical)) { continue; }
+                if (g.grid[b] != g.grid[a]) { continue; }
+                if (e[b] == 1) { continue; }
+                e[b] = 1;
+                u.emplace_back(b);
+                v.emplace_back(nx, ny);
+            }
+        }
+        return u;
+    }
+    static vector< vector<int> > groupLists (E512Grid& g, E512Grid& horizontal, E512Grid& vertical) {
+        static const int dx[4] = {0, 1, 0, -1};
+        static const int dy[4] = {-1, 0, 1, 0};
+        static vector<e512pos> v;
+        
+        vector<int> e = vector<int>(g.grid.size(), 0);
+        vector< vector<int> > r;
+        for (int y = 0; y < g.H; ++y) {
+            for (int x = 0; x < g.W; ++x) {
+                int a = g.getIndex(x, y);
+                if (e[a] == 1) { continue; }
+                e[a] = 1;
+                vector<int> u;
+                u.emplace_back(a);
+                v.clear();
+                v.emplace_back(x, y);
+                while (v.size() > 0) {
+                    e512pos p = v.back();
+                    v.pop_back();
+                    for (int d = 0; d < 4; ++d) {
+                        int nx = p.x + dx[d];
+                        int ny = p.y + dy[d];
+                        int b = g.getIndex(nx, ny);
+                        if (!E512GridUtils::canMove(p.x, p.y, nx, ny, g, horizontal, vertical)) { continue; }
+                        if (g.grid[b] != g.grid[a]) { continue; }
+                        if (e[b] == 1) { continue; }
+                        e[b] = 1;
+                        u.emplace_back(b);
+                        v.emplace_back(nx, ny);
+                    }
+                }
+                r.emplace_back(u);
+            }
+        }
+        return r;
+    }
+};
+
+
 inline double distance (const double& ax, const double& ay, const double& bx, const double& by) {
     return sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
 }
