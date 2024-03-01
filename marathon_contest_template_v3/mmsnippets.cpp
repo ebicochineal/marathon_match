@@ -165,6 +165,29 @@ namespace std {
     };
 }
 
+
+struct Edge {
+public:
+    int a, b, cost;
+    Edge () {
+        this->a = 0;
+        this->b = 0;
+        this->cost = 1000000;
+    }
+    Edge (int a, int b, int cost) {
+        this->a = a;
+        this->b = b;
+        this->cost = cost;
+    }
+    bool operator == (const Edge& t) const { return this->a == t.a && this->b == t.b; }
+};
+namespace std {
+    template <> class hash<Edge> {
+    public:
+        size_t operator()(const Edge& t) const{ return hash<int>()(t.a<<16) | hash<int>()(t.b); }
+    };
+}
+
 class GraphDijkstra {
 private:
     class Node {
@@ -191,7 +214,7 @@ public:
     
     GraphDijkstra () {}
     
-    GraphDijkstra (int n, vector<Edge> edges, bool undir = false) {
+    GraphDijkstra (int n, vector<Edge>& edges, bool undir = false) {
         this->pathcost = 0;
         this->path.clear();
         this->n = n;
@@ -208,7 +231,7 @@ public:
         }
     }
     
-    GraphDijkstra (vector<Edge> edges, bool undir = false) {
+    GraphDijkstra (vector<Edge>& edges, bool undir = false) {
         this->pathcost = 0;
         this->path.clear();
         int n = 0;
@@ -226,6 +249,21 @@ public:
             }
         }
     }
+    
+    void costUpdate (vector<Edge>& edges, bool undir = false) {
+        for (auto&& i : this->edgecost) { i.clear(); }
+        if (undir) {// undirected
+            for (auto&& i : edges) {
+                this->edgecost[i.a].emplace_back(i.b, i.cost);
+                this->edgecost[i.b].emplace_back(i.a, i.cost);
+            }
+        } else {// directed
+            for (auto&& i : edges) {
+                this->edgecost[i.a].emplace_back(i.b, i.cost);
+            }
+        }
+    }
+    
     
     void calcPath (int start_i, int end_i) {
         static const int limit = numeric_limits<int>::max();
