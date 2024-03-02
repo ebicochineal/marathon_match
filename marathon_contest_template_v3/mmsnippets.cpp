@@ -514,6 +514,51 @@ struct E512GridUtils {
         return e;
     }
     
+    static vector< vector<int> > getCostMatrix (E512Grid& g) {
+        int n = g.W * g.H;
+        vector< vector<int> > mat = vector< vector<int> >(n, vector<int>(n));
+        vector<Edge> e = E512GridUtils::getEdges(g);
+        GraphDijkstra d(e);
+        for (int a = 0; a < n; ++a) {
+            for (int b = 0; b < n; ++b) {
+                d.calcPath(a, b);
+                mat[a][b] = d.pathcost;
+                mat[b][a] = d.pathcost;
+            }
+        }
+        return mat;
+    }
+    static vector< vector<int> > getCostMatrix (E512Grid& g, int wall) {
+        int n = g.W * g.H;
+        vector< vector<int> > mat = vector< vector<int> >(n, vector<int>(n));
+        vector<Edge> e = E512GridUtils::getEdges(g, wall);
+        GraphDijkstra d(e);
+        for (int a = 0; a < n; ++a) {
+            for (int b = 0; b < n; ++b) {
+                d.calcPath(a, b);
+                mat[a][b] = d.pathcost;
+                mat[b][a] = d.pathcost;
+            }
+        }
+        return mat;
+    }
+    static vector< vector<int> > getCostMatrix (E512Grid& g, E512Grid& horizontal, E512Grid& vertical) {
+        int n = g.W * g.H;
+        vector< vector<int> > mat = vector< vector<int> >(n, vector<int>(n));
+        vector<Edge> e = E512GridUtils::getEdges(g, horizontal, vertical);
+        GraphDijkstra d(e);
+        for (int a = 0; a < n; ++a) {
+            for (int b = 0; b < n; ++b) {
+                d.calcPath(a, b);
+                mat[a][b] = d.pathcost;
+                mat[b][a] = d.pathcost;
+            }
+        }
+        return mat;
+    }
+    
+    
+    
     static void rotateRight (E512Grid& g) {
         if (g.W != g.H) { return; }
         int n = g.W;
@@ -697,6 +742,115 @@ struct E512GridUtils {
         return r;
     }
 };
+
+vector<Edge> minimumSpanningTree (vector<Edge> e, bool undir=true) {
+    static bitset<4096> v;
+    vector<Edge> r;
+    if (e.size() == 0) { return r; }
+    sort(e.begin(), e.end(), [](const Edge& a, const Edge& b) { return a.cost < b.cost; });
+    v.reset();
+    for (auto&& i : e) { v[i.a]=true; v[i.b]=true; }
+    int t = e[0].a;
+    v[t] = false;
+    bool f = true;
+    if (undir) {
+        while (v.count() > 0 && f) {
+            f = false;
+            for (auto&& i : e) {
+                if (v[i.a] == false && v[i.b] == true) {
+                    v[i.b] = false;
+                    r.emplace_back(i);
+                    f = true;
+                    break;
+                }
+                if (v[i.b] == false && v[i.a] == true) {
+                    v[i.a] = false;
+                    r.emplace_back(i);
+                    f = true;
+                    break;
+                }
+            }
+        }
+    } else {
+        while (v.count() > 0 && f) {
+            f = false;
+            for (auto&& i : e) {
+                if (v[i.a] == false && v[i.b] == true) {
+                    v[i.b] = false;
+                    r.emplace_back(i);
+                    f = true;
+                    break;
+                }
+            }
+        }
+    }
+    return r;
+}
+
+
+vector<int> kMeansCenter (vector<int>& r, int n, int k, vector< vector<int> >& mat) {
+    vector<int> s(n, 0);
+    vector<int> b(k);
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            if (r[i] == r[j] && mat[i][j] >= 0) { s[i] += mat[i][j]; }
+        }
+    }
+    for (int i = 0; i < k; ++i) {
+        int best = 1000000;
+        int bestindex = -1;
+        for (int j = 0; j < n; ++j) {
+            if (r[j] == i && s[j] < best && mat[i][j] >= 0) {
+                best = s[j];
+                bestindex = j;
+            }
+        }
+        b[i] = bestindex;
+    }
+    return b;
+}
+
+vector<int> kMeans (int n, int k, vector< vector<int> >& mat, uint32_t iter=6) {
+    vector<int> r(n);
+    for (auto&& i : r) { i = xrnd() % k; }
+    for (int z = 0; z < iter; ++z) {
+        vector<int> b = kMeansCenter(r, n, k, mat);
+        for (int i = 0; i < n; ++i) {
+            int best = 1000000;
+            int bestindex = -1;
+            for (int j = 0; j < k; ++j) {
+                int d = mat[b[j]][i];
+                if (d < best && d >= 0) {
+                    best = d;
+                    bestindex = j;
+                }
+            }
+            r[i] = bestindex;
+        }
+    }
+    return r;
+}
+
+vector<int> kMeans (vector<int> r, int n, int k, vector< vector<int> >& mat) {
+    vector<int> b = kMeansCenter(r, n, k, mat);
+    for (int i = 0; i < n; ++i) {
+        int best = 1000000;
+        int bestindex = -1;
+        for (int j = 0; j < k; ++j) {
+            int d = mat[b[j]][i];
+            if (d < best && d >= 0) {
+                best = d;
+                bestindex = j;
+            }
+        }
+        r[i] = bestindex;
+    }
+    return r;
+}
+
+
+
+
 
 
 inline double distance (const double& ax, const double& ay, const double& bx, const double& by) {
