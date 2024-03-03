@@ -329,10 +329,10 @@ vector<Edge> gridToGraph (vector< vector<int> >& grid) {
     return r;
 }
 
-
 struct E512Grid {
     vector<int> grid;
     int W, H;
+    E512Grid () {}
     E512Grid (int W, int H) { this->init(W, H); }
     E512Grid (int N) { this->init(N, N); }
     void init (int W, int H) {
@@ -557,7 +557,14 @@ struct E512GridUtils {
         return mat;
     }
     
-    
+    static vector< vector<int> > getEdges2 (E512Grid& g, E512Grid& horizontal, E512Grid& vertical) {
+        vector<Edge> e = E512GridUtils::getEdges(g, horizontal, vertical);
+        vector< vector<int> > r = vector< vector<int> >(g.W*g.H, vector<int>());
+        for (auto&& i : e) {
+            r[i.a].emplace_back(i.b);
+        }
+        return r;
+    }
     
     static void rotateRight (E512Grid& g) {
         if (g.W != g.H) { return; }
