@@ -165,29 +165,6 @@ namespace std {
     };
 }
 
-
-struct Edge {
-public:
-    int a, b, cost;
-    Edge () {
-        this->a = 0;
-        this->b = 0;
-        this->cost = 1000000;
-    }
-    Edge (int a, int b, int cost) {
-        this->a = a;
-        this->b = b;
-        this->cost = cost;
-    }
-    bool operator == (const Edge& t) const { return this->a == t.a && this->b == t.b; }
-};
-namespace std {
-    template <> class hash<Edge> {
-    public:
-        size_t operator()(const Edge& t) const{ return hash<int>()(t.a<<16) | hash<int>()(t.b); }
-    };
-}
-
 class GraphDijkstra {
 private:
     class Node {
@@ -451,6 +428,7 @@ struct E512GridUtils {
         return r;
     }
     
+    // Direction
     static vector<Edge> getEdges (E512Grid& g) {
         vector<Edge> e;
         for (int y = 0; y < g.H; ++y) {
@@ -464,7 +442,6 @@ struct E512GridUtils {
         }
         return e;
     }
-    
     static vector<Edge> getEdges (E512Grid& g, int wall) {
         vector<Edge> e;
         for (int y = 0; y < g.H; ++y) {
@@ -479,7 +456,6 @@ struct E512GridUtils {
         }
         return e;
     }
-    
     static vector<Edge> getEdges (E512Grid& g, E512Grid& horizontal, E512Grid& vertical) {
         vector<Edge> e;
         for (int y = 0; y < g.H; ++y) {
@@ -557,7 +533,7 @@ struct E512GridUtils {
         return mat;
     }
     
-    static vector< vector<int> > getEdges2 (E512Grid& g, E512Grid& horizontal, E512Grid& vertical) {
+    static vector< vector<int> > getVertEdges (E512Grid& g, E512Grid& horizontal, E512Grid& vertical) {
         vector<Edge> e = E512GridUtils::getEdges(g, horizontal, vertical);
         vector< vector<int> > r = vector< vector<int> >(g.W*g.H, vector<int>());
         for (auto&& i : e) {
@@ -565,6 +541,22 @@ struct E512GridUtils {
         }
         return r;
     }
+    
+    static vector<Edge> toUnDirection (E512Grid& g, vector<Edge>& e) {
+        vector<Edge> t;
+        unordered_set<e512pos> us;
+        for (auto&& i : e) {
+            int a = i.a;
+            int b = i.b;
+            if (a > b) { swap(a, b); }
+            if (us.find(e512pos(a, b)) == us.end()) {
+                t.emplace_back(a, b, 1);
+                us.emplace(e512pos(a, b));
+            }
+        }
+        e = t;
+    }
+    
     
     static void rotateRight (E512Grid& g) {
         if (g.W != g.H) { return; }
