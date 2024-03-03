@@ -543,20 +543,19 @@ struct E512GridUtils {
     }
     
     static vector<Edge> toUnDirection (E512Grid& g, vector<Edge>& e) {
-        vector<Edge> t;
+        vector<Edge> r;
         unordered_set<e512pos> us;
         for (auto&& i : e) {
             int a = i.a;
             int b = i.b;
             if (a > b) { swap(a, b); }
             if (us.find(e512pos(a, b)) == us.end()) {
-                t.emplace_back(a, b, 1);
+                r.emplace_back(a, b, 1);
                 us.emplace(e512pos(a, b));
             }
         }
-        e = t;
+        return r;
     }
-    
     
     static void rotateRight (E512Grid& g) {
         if (g.W != g.H) { return; }
