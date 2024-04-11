@@ -284,28 +284,6 @@ public:
     }
 };
 
-vector<Edge> gridToGraph (vector< vector<int> >& grid) {
-    static const int dx[4] = {0, 0, -1, 1};
-    static const int dy[4] = {-1, 1, 0, 0};
-    
-    vector<Edge> r;
-    int h = grid.size();
-    int w = grid[0].size();
-    for (int y = 0; y < h; ++y) {
-        for (int x = 0; x < w; ++x) {
-            int ax = x;
-            int ay = y;
-            for (int i = 0; i < 4; ++i) {
-                int bx = ax + dx[i];
-                int by = ay + dy[i];
-                if (bx < 0 || bx >= w || by < 0 || by >= h) { continue; }
-                r.emplace_back(Edge(ay*w+ax, by*w+bx, grid[by][bx]));
-            }
-        }
-    }
-    return r;
-}
-
 struct E512Grid {
     vector<int> grid;
     int W, H;
@@ -533,12 +511,22 @@ struct E512GridUtils {
         return mat;
     }
     
+    static vector< vector<int> > getVertEdges (E512Grid& g) {
+        vector<Edge> e = E512GridUtils::getEdges(g);
+        vector< vector<int> > r = vector< vector<int> >(g.W*g.H, vector<int>());
+        for (auto&& i : e) { r[i.a].emplace_back(i.b); }
+        return r;
+    }
+    static vector< vector<int> > getVertEdges (E512Grid& g, int wall) {
+        vector<Edge> e = E512GridUtils::getEdges(g, wall);
+        vector< vector<int> > r = vector< vector<int> >(g.W*g.H, vector<int>());
+        for (auto&& i : e) { r[i.a].emplace_back(i.b); }
+        return r;
+    }
     static vector< vector<int> > getVertEdges (E512Grid& g, E512Grid& horizontal, E512Grid& vertical) {
         vector<Edge> e = E512GridUtils::getEdges(g, horizontal, vertical);
         vector< vector<int> > r = vector< vector<int> >(g.W*g.H, vector<int>());
-        for (auto&& i : e) {
-            r[i.a].emplace_back(i.b);
-        }
+        for (auto&& i : e) { r[i.a].emplace_back(i.b); }
         return r;
     }
     
@@ -739,6 +727,65 @@ struct E512GridUtils {
         }
         return r;
     }
+    
+    static vector<int> withinRangeVertices (int startindex, int range, vector< vector< int > >& vertedges, int verticescnt = 10000) {
+        static array<int, 10000> visited;
+        static int bfscnt = 0;
+        if (bfscnt == 0 || bfscnt > 1000000) { for (int i = 0; i < verticescnt; ++i) { visited[i] = 0; } }
+        bfscnt += 1;
+        static vector<int> q;
+        q.clear();
+        q.emplace_back(startindex);
+        visited[startindex] = bfscnt;
+        int qcnt = 0;
+        int tqcnt = 0;
+        for (int z = 0; z < range; ++z) {
+            tqcnt = q.size();
+            for (int i = qcnt; i < tqcnt; ++i) {
+                for (auto&& j : vertedges[q[i]]) {
+                    if (visited[j] < bfscnt) {
+                        q.emplace_back(j);
+                        visited[j] = bfscnt;
+                    }
+                }
+            }
+            qcnt = tqcnt;
+        }
+        return q;
+    }
+    static vector< vector<int> > withinRangeVerticesDist (int startindex, int range, vector< vector< int > >& vertedges, int verticescnt = 10000) {
+        static array<int, 10000> visited;
+        static int bfscnt = 0;
+        if (bfscnt == 0 || bfscnt > 1000000) { for (int i = 0; i < verticescnt; ++i) { visited[i] = 0; } }
+        bfscnt += 1;
+        static vector<int> q, t;
+        static vector< vector<int> > r;
+        q.clear();
+        r.clear();
+        q.emplace_back(startindex);
+        t.clear();
+        t.emplace_back(startindex);
+        r.emplace_back(t);
+        visited[startindex] = bfscnt;
+        int qcnt = 0;
+        int tqcnt = 0;
+        for (int z = 0; z < range; ++z) {
+            tqcnt = q.size();
+            for (int i = qcnt; i < tqcnt; ++i) {
+                for (auto&& j : vertedges[q[i]]) {
+                    if (visited[j] < bfscnt) {
+                        q.emplace_back(j);
+                        visited[j] = bfscnt;
+                    }
+                }
+            }
+            t.clear();
+            for (int i = qcnt; i < q.size(); ++i) { t.emplace_back(q[i]); }
+            r.emplace_back(t);
+            qcnt = tqcnt;
+        }
+        return r;
+    }
 };
 
 vector<Edge> minimumSpanningTree (vector<Edge> e, bool undir=true) {
@@ -845,8 +892,6 @@ vector<int> kMeans (vector<int> r, int n, int k, vector< vector<int> >& mat) {
     }
     return r;
 }
-
-
 
 
 
