@@ -297,6 +297,7 @@ struct E512Grid {
     }
     int getIndex (int x, int y) { return y*this->W+x; }
     int getValue (int x, int y) { return this->grid[y*this->W+x]; }
+    void setValue (int x, int y, int value) { this->grid[y*this->W+x] = value; }
     bool inSide (int x, int y) { return (x >= 0 && x < this->W && y >= 0 && y < this->H); }
     void input () {
         for (int y = 0; y < this->H; ++y) {
