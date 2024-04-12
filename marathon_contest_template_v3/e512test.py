@@ -24,6 +24,8 @@ class Option:
         self.errtag = 'no'
         self.os = 'win'
         
+        self.errscore = -1
+        
         self.start = 1
         self.testcnt = 100
         self.ops = []
@@ -93,6 +95,8 @@ class Option:
                             self.score_keyword += [s]
                         if mode == '[fullpath]':
                             self.fullpath += [s]
+                        if mode == '[errscore]':
+                            self.errscore += int(s)
         tmp = []
         for i in self.ops:
             if '-maxthread' in i:
@@ -398,7 +402,7 @@ class Test:
         b = '{:16.4f}'.format(result[1] - self.reads[p])
         e = '-{:16.4f}'.format(self.reads[p])
         t = result[1] - self.reads[p]
-        if result[1] < 0:
+        if result[1] <= self.op.errscore:
             b = red(e)
             self.ecnt += 1
         else:
