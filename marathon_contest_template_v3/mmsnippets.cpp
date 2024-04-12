@@ -834,56 +834,46 @@ vector<Edge> minimumSpanningTree (vector<Edge> e, bool undir=true) {
 }
 
 
-vector<int> kMeansCenter (vector<int>& r, int n, int k, vector< vector<int> >& mat) {
-    vector<int> s(n, 0);
-    vector<int> b(k);
-    for (int i = 0; i < n; ++i) {
-        for (int j = 0; j < n; ++j) {
-            if (r[i] == r[j] && mat[i][j] >= 0) { s[i] += mat[i][j]; }
+
+vector<int> kMeansCenter (vector<int>& r, int k, vector< vector<int> >& mat) {
+    vector<int> b(k, -1);
+    vector<int> s(k, 1000000);
+    for (int i = 0; i < mat.size(); ++i) {
+        if (r[i] < 0) { continue; } 
+        int t = 0;
+        for (int j = 0; j < mat.size(); ++j) {
+            if (r[i] == r[j] && mat[i][j] >= 0) { t += mat[i][j]; }
         }
-    }
-    for (int i = 0; i < k; ++i) {
-        int best = 1000000;
-        int bestindex = -1;
-        for (int j = 0; j < n; ++j) {
-            if (r[j] == i && s[j] < best && mat[i][j] >= 0) {
-                best = s[j];
-                bestindex = j;
-            }
+        if (t < s[r[i]]) {
+            b[r[i]] = i;
+            s[r[i]] = t;
         }
-        b[i] = bestindex;
     }
     return b;
 }
 
-vector<int> kMeans (int n, int k, vector< vector<int> >& mat, uint32_t iter=6) {
-    vector<int> r(n);
-    for (auto&& i : r) { i = xrnd() % k; }
-    for (int z = 0; z < iter; ++z) {
-        vector<int> b = kMeansCenter(r, n, k, mat);
-        for (int i = 0; i < n; ++i) {
-            int best = 1000000;
-            int bestindex = -1;
-            for (int j = 0; j < k; ++j) {
-                int d = mat[b[j]][i];
-                if (d < best && d >= 0) {
-                    best = d;
-                    bestindex = j;
-                }
-            }
-            r[i] = bestindex;
+vector<int> kMeansInit (int k, vector< vector<int> >& mat, bool obstacles) {
+    vector<int> r(mat.size(), -1);
+    for (auto&& i : r) { i = xrnd()%k; }
+    if (obstacles) {
+        for (int i = 0; i < mat.size(); ++i) {
+            int c = 1;
+            for (int j = 0; j < mat.size(); ++j) { c += mat[i][j] < 0; }
+            if (c >= mat.size()) { r[i] = -1; }
         }
     }
     return r;
 }
 
-vector<int> kMeans (vector<int> r, int n, int k, vector< vector<int> >& mat) {
-    vector<int> b = kMeansCenter(r, n, k, mat);
-    for (int i = 0; i < n; ++i) {
+void kMeans (vector<int>& r, int k, vector< vector<int> >& mat) {
+    vector<int> center = kMeansCenter(r, k, mat);
+    for (int i = 0; i < mat.size(); ++i) {
         int best = 1000000;
         int bestindex = -1;
+        if (r[i] < 0) { continue; }
         for (int j = 0; j < k; ++j) {
-            int d = mat[b[j]][i];
+            if (center[j] < 0) { continue; }
+            int d = mat[center[j]][i];
             if (d < best && d >= 0) {
                 best = d;
                 bestindex = j;
@@ -891,9 +881,17 @@ vector<int> kMeans (vector<int> r, int n, int k, vector< vector<int> >& mat) {
         }
         r[i] = bestindex;
     }
-    return r;
 }
 
+// connected graph cost matrix, excluding obstacles
+vector<int> kMeans (int k, vector< vector<int> >& mat, uint32_t iter=6, bool obstacles=true) {
+    vector<int> r = kMeansInit(k, mat, obstacles);
+    for (int z = 0; z < iter; ++z) {
+        vector<int> center = kMeansCenter(r, k, mat);
+        kMeans(r, k, mat);
+    }
+    return r;
+}
 
 
 
