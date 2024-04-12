@@ -833,8 +833,6 @@ vector<Edge> minimumSpanningTree (vector<Edge> e, bool undir=true) {
     return r;
 }
 
-
-
 vector<int> kMeansCenter (vector<int>& r, int k, vector< vector<int> >& mat) {
     vector<int> b(k, -1);
     vector<int> s(k, 1000000);
@@ -852,10 +850,10 @@ vector<int> kMeansCenter (vector<int>& r, int k, vector< vector<int> >& mat) {
     return b;
 }
 
-vector<int> kMeansInit (int k, vector< vector<int> >& mat, bool obstacles) {
+vector<int> kMeansInit (int k, vector< vector<int> >& mat, bool wall) {
     vector<int> r(mat.size(), -1);
     for (auto&& i : r) { i = xrnd()%k; }
-    if (obstacles) {
+    if (wall) {
         for (int i = 0; i < mat.size(); ++i) {
             int c = 1;
             for (int j = 0; j < mat.size(); ++j) { c += mat[i][j] < 0; }
@@ -883,16 +881,15 @@ void kMeans (vector<int>& r, int k, vector< vector<int> >& mat) {
     }
 }
 
-// connected graph cost matrix, excluding obstacles
-vector<int> kMeans (int k, vector< vector<int> >& mat, uint32_t iter=6, bool obstacles=true) {
-    vector<int> r = kMeansInit(k, mat, obstacles);
+// connected graph cost matrix, excluding wall
+vector<int> kMeans (int k, vector< vector<int> >& mat, uint32_t iter=6, bool wall=true) {
+    vector<int> r = kMeansInit(k, mat, wall);
     for (int z = 0; z < iter; ++z) {
         vector<int> center = kMeansCenter(r, k, mat);
         kMeans(r, k, mat);
     }
     return r;
 }
-
 
 
 inline double distance (const double& ax, const double& ay, const double& bx, const double& by) {
