@@ -896,10 +896,10 @@ inline double distance (const double& ax, const double& ay, const double& bx, co
     return sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
 }
 inline double distance (const int& ax, const int& ay, const int& bx, const int& by) {
-    return sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
+    return sqrt((double)(ax - bx) * (double)(ax - bx) + (double)(ay - by) * (double)(ay - by));
 }
-inline float distance (const e512pos& a, const e512pos& b) {
-    return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+inline double distance (const e512pos& a, const e512pos& b) {
+    return sqrt((double)(a.x - b.x) * (double)(a.x - b.x) + (double)(a.y - b.y) * (double)(a.y - b.y));
 }
 
 
