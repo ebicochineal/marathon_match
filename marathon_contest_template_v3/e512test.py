@@ -243,10 +243,16 @@ class TopCoderTesterQueue(threading.Thread):
                 else:
                     err = cerr
                 if errf:
-                    di = self.op.crdir + 'outfiles'
+                    di = self.op.crdir + 'debug'
                     try_mkdir(di)
                     with open(di + '/' + str(self.n) + '.txt', 'w') as f:
                         f.write(errf)
+                else:
+                    di = self.op.crdir + 'debug'
+                    try_mkdir(di)
+                    with open(di + '/' + str(self.n) + '.txt', 'w') as f:
+                        f.write(errf)
+                
                 if timecheck != '':
                     self.result = (self.n, decimal.Decimal(-1), timecheck, False)
                 else:
