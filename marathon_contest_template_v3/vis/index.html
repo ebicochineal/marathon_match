@@ -45,9 +45,18 @@
         <textarea id="e512w3d-textarea1" rows="3" style="width:50%; resize:vertical; min-height:64px;"  onchange="inputChange()"></textarea>
         </br>
         Output:
-        <input type="file" id="outputfile" name="outputfile" accept="text/plain" onchange="fileLoadOutput1()"/>
+        <input type="file" id="outputfile" name="outputfile" accept="text/plain"/>
         </br>
         <textarea id="e512w3d-textarea2" rows="3" style="width:50%; resize:vertical; min-height:64px;" onchange="outputChange()"></textarea>
+        
+        </br>
+        Debug:
+        <input type="file" id="debugfile" name="debugfile" accept="text/plain"/>
+        </br>
+        <textarea id="e512w3d-textarea3" rows="3" style="width:50%; resize:vertical; min-height:64px;" onchange="debugChange()"></textarea>
+        
+        
+        
         <canvas id="e512w3d-canvas"></canvas>
         <p>・<a href="https://github.com/ebicochineal/E512W3D" target="_blank">E512W3D</a></p>
         
@@ -59,27 +68,36 @@
         
         var gem_inchange = false;
         var gem_outchange = false;
+        var gem_debugchange = false;
         var gem_in_files = [];
         var gem_out_files = [];
+        var gem_debug_files = [];
         var gem_is_in_load = 0;
         var gem_load_in_text = "";
         var gem_is_out_load = 0;
         var gem_load_out_text = "";
+        var gem_is_debug_load = 0;
+        var gem_load_debug_text = "";
         
         
         function seedChange () {
             a = document.getElementById('seed');
             fin = null;
             fout = null;
+            fdebug = null;
             for (let i = 0; i < gem_in_files.length; ++i) {
                 if (gem_in_files[i].name.split('.')[0] == a.value) { fin = gem_in_files[i] }
             }
             for (let i = 0; i < gem_out_files.length; ++i) {
                 if (gem_out_files[i].name.split('.')[0] == a.value) { fout = gem_out_files[i] }
             }
+            for (let i = 0; i < gem_debug_files.length; ++i) {
+                if (gem_debug_files[i].name.split('.')[0] == a.value) { fdebug = gem_debug_files[i] }
+            }
             if (fin != null && fout != null) {
                 fileLoadInput(fin);
                 fileLoadOutput(fout);
+                if (fdebug != null) { fileLoadDebug(fdebug); }
             }
         }
         
@@ -87,6 +105,7 @@
             gem_files = files;
             gem_in_files = [];
             gem_out_files = [];
+            gem_debug_files = [];
             for (i=0; i<files.length; i++) {
                 path = files[i].webkitRelativePath
                 name = files[i].name.split('.')[0]
@@ -94,6 +113,7 @@
                 if (isNaN(name)) { continue; }
                 if (path.indexOf('/in/') >= 0) { gem_in_files.push(files[i]); }
                 if (path.indexOf('/out/') >= 0) { gem_out_files.push(files[i]); }
+                if (path.indexOf('/debug/') >= 0) { gem_debug_files.push(files[i]); }
                 
             }
             seedChange();
@@ -115,13 +135,25 @@
         function fileLoadOutput (f) {
             gem_is_out_load = 0;
             gem_load_out_text = "";
-            let outfr = new FileReader();
-            outfr.addEventListener('load', function (e) {
+            let fr = new FileReader();
+            fr.addEventListener('load', function (e) {
                 gem_is_out_load = 1;
                 document.getElementById("e512w3d-textarea2").value = e.target.result.replace("\r", "");
                 outputChange();
             });
-            outfr.readAsText(f);
+            fr.readAsText(f);
+        }
+        
+        function fileLoadDebug (f) {
+            gem_is_debug_load = 0;
+            gem_load_debug_text = "";
+            let fr = new FileReader();
+            fr.addEventListener('load', function (e) {
+                gem_is_debug_load = 1;
+                document.getElementById("e512w3d-textarea3").value = e.target.result.replace("\r", "");
+                debugChange();
+            });
+            fr.readAsText(f);
         }
         
         function inputChange () {
@@ -132,9 +164,14 @@
             gem_load_out_text = document.getElementById("e512w3d-textarea2").value;
             gem_outchange = true;
         }
+        function debugChange () {
+            gem_load_debug_text = document.getElementById("e512w3d-textarea3").value;
+            gem_debugchange = true;
+        }
         
         document.getElementById('inputfile').addEventListener('change', function (e) { fileLoadInput(e.target.files[0])} );
-        document.getElementById('outputfile').addEventListener('change', function (e) { fileLoadOutputput(e.target.files[0])} );
+        document.getElementById('outputfile').addEventListener('change', function (e) { fileLoadOutput(e.target.files[0])} );
+        document.getElementById('debugfile').addEventListener('change', function (e) { fileLoadDebug(e.target.files[0])} );
         
     </script>
     

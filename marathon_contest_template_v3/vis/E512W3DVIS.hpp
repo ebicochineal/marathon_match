@@ -59,7 +59,10 @@ EM_JS(void, readTextOut, (int n, char* text), {
     var l = Math.min(gem_load_out_text.length+1, 4194304);
     stringToUTF8(gem_load_out_text, text, l);
 });
-EM_JS(void, readTextDebug, (int n, char* text), {});
+EM_JS(void, readTextDebug, (int n, char* text), {
+    var l = Math.min(gem_load_debug_text.length+1, 4194304);
+    stringToUTF8(gem_load_debug_text, text, l);
+});
 EM_JS(bool, inputChange, (), {
     let t = gem_inchange || gem_outchange;
     gem_inchange = false;
