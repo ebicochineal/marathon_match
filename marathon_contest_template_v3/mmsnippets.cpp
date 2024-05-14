@@ -385,7 +385,9 @@ struct E512Grid {
         for (int x = 0; x < this->W*2+1; ++x) { r += '#'; }
         return r;
     }
-    
+    int* operator[](int a) {
+        return &this->grid[a*this->W];
+    }
 };
 ostream& operator << (ostream& os, const E512Grid& p) {
     for (int y = 0; y < p.H; ++y) {
@@ -469,39 +471,8 @@ struct E512GridUtils {
         return e;
     }
     
-    static vector< vector<int> > getCostMatrix (E512Grid& g) {
+    static vector< vector<int> > getMatrix (E512Grid& g, vector<Edge>& e) {
         int n = g.W * g.H;
-        vector< vector<int> > mat = vector< vector<int> >(n, vector<int>(n));
-        vector<Edge> e = E512GridUtils::getEdges(g);
-        GraphDijkstra d(e);
-        for (int a = 0; a < n; ++a) {
-            for (int b = 0; b < n; ++b) {
-                d.calcPath(a, b);
-                mat[a][b] = d.pathcost;
-                mat[b][a] = d.pathcost;
-            }
-        }
-        return mat;
-    }
-    static vector< vector<int> > getCostMatrix (E512Grid& g, int wall) {
-        int n = g.W * g.H;
-        vector< vector<int> > mat = vector< vector<int> >(n, vector<int>(n));
-        vector<Edge> e = E512GridUtils::getEdges(g, wall);
-        GraphDijkstra d(e);
-        for (int a = 0; a < n; ++a) {
-            for (int b = 0; b < n; ++b) {
-                d.calcPath(a, b);
-                mat[a][b] = d.pathcost;
-                mat[b][a] = d.pathcost;
-            }
-        }
-        return mat;
-    }
-    static vector< vector<int> > getCostMatrix (E512Grid& g, E512Grid& horizontal, E512Grid& vertical) {
-        int n = g.W * g.H;
-        vector< vector<int> > mat = vector< vector<int> >(n, vector<int>(n));
-        vector<Edge> e = E512GridUtils::getEdges(g, horizontal, vertical);
-        GraphDijkstra d(e);
         for (int a = 0; a < n; ++a) {
             for (int b = 0; b < n; ++b) {
                 d.calcPath(a, b);
@@ -512,20 +483,7 @@ struct E512GridUtils {
         return mat;
     }
     
-    static vector< vector<int> > getVertEdges (E512Grid& g) {
-        vector<Edge> e = E512GridUtils::getEdges(g);
-        vector< vector<int> > r = vector< vector<int> >(g.W*g.H, vector<int>());
-        for (auto&& i : e) { r[i.a].emplace_back(i.b); }
-        return r;
-    }
-    static vector< vector<int> > getVertEdges (E512Grid& g, int wall) {
-        vector<Edge> e = E512GridUtils::getEdges(g, wall);
-        vector< vector<int> > r = vector< vector<int> >(g.W*g.H, vector<int>());
-        for (auto&& i : e) { r[i.a].emplace_back(i.b); }
-        return r;
-    }
-    static vector< vector<int> > getVertEdges (E512Grid& g, E512Grid& horizontal, E512Grid& vertical) {
-        vector<Edge> e = E512GridUtils::getEdges(g, horizontal, vertical);
+    static vector< vector<int> > getVertEdges (E512Grid& g, vector<Edge>& e) {
         vector< vector<int> > r = vector< vector<int> >(g.W*g.H, vector<int>());
         for (auto&& i : e) { r[i.a].emplace_back(i.b); }
         return r;
@@ -850,19 +808,6 @@ vector<int> kMeansCenter (vector<int>& r, int k, vector< vector<int> >& mat) {
     return b;
 }
 
-vector<int> kMeansInit (int k, vector< vector<int> >& mat, bool wall) {
-    vector<int> r(mat.size(), -1);
-    for (auto&& i : r) { i = xrnd()%k; }
-    if (wall) {
-        for (int i = 0; i < mat.size(); ++i) {
-            int c = 1;
-            for (int j = 0; j < mat.size(); ++j) { c += mat[i][j] < 0; }
-            if (c >= mat.size()) { r[i] = -1; }
-        }
-    }
-    return r;
-}
-
 void kMeans (vector<int>& r, int k, vector< vector<int> >& mat) {
     vector<int> center = kMeansCenter(r, k, mat);
     for (int i = 0; i < mat.size(); ++i) {
@@ -879,6 +824,20 @@ void kMeans (vector<int>& r, int k, vector< vector<int> >& mat) {
         }
         r[i] = bestindex;
     }
+}
+
+// wall -1
+vector<int> kMeansInit (int k, vector< vector<int> >& mat, bool wall) {
+    vector<int> r(mat.size(), -1);
+    for (auto&& i : r) { i = xrnd()%k; }
+    if (wall) {
+        for (int i = 0; i < mat.size(); ++i) {
+            int c = 1;
+            for (int j = 0; j < mat.size(); ++j) { c += mat[i][j] < 0; }
+            if (c >= mat.size()) { r[i] = -1; }
+        }
+    }
+    return r;
 }
 
 // connected graph cost matrix, excluding wall
