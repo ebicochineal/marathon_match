@@ -473,6 +473,8 @@ struct E512GridUtils {
     
     static vector< vector<int> > getMatrix (E512Grid& g, vector<Edge>& e) {
         int n = g.W * g.H;
+        vector< vector<int> > mat = vector< vector<int> >(n, vector<int>(n));
+        GraphDijkstra d(n, e);
         for (int a = 0; a < n; ++a) {
             for (int b = 0; b < n; ++b) {
                 d.calcPath(a, b);
