@@ -96,7 +96,7 @@ class Option:
                         if mode == '[fullpath]':
                             self.fullpath += [s]
                         if mode == '[errscore]':
-                            self.errscore += int(s)
+                            self.errscore = int(s)
         tmp = []
         for i in self.ops:
             if '-maxthread' in i:
