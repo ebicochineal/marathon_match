@@ -31,7 +31,7 @@ public:
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_PLUS) || defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_FIRE) || defined(ARDUINO_M5STACK_Core2)
         float ax, ay, az;
         M5.update();
-        M5.MPU6886.getAccelData(&ax, &ay, &az);
+        M5.IMU.getAccelData(&ax, &ay, &az);
         
         E512W3DInput::mprev[0] = E512W3DInput::mtmp[0];
         E512W3DInput::mprev[1] = E512W3DInput::mtmp[1];
@@ -1359,7 +1359,7 @@ POSSIBILITY OF SUCH DAMAGE.
         sx = max(sx, (int16_t)0);
         ex = min(ex, (int16_t)(this->width - 1));
         
-        for (int16_t x = sx; x < ex; ++x) {
+        for (int16_t x = sx; x <= ex; ++x) {
             if (!this->inSide2(x, y)) { continue; }
             if (z > this->zbuff->readPixel(x+this->sx, y+this->sy)) {
                 this->zbuff->drawPixel(x+this->sx, y+this->sy, z);
@@ -1377,7 +1377,7 @@ POSSIBILITY OF SUCH DAMAGE.
         sx = max(sx, (int16_t)0);
         ex = min(ex, (int16_t)(this->width - 1));
         
-        for (int16_t x = sx; x < ex; ++x) {
+        for (int16_t x = sx; x <= ex; ++x) {
             if (!this->inSide2(x, y)) { continue; }
             if (z > this->zbuff->readPixel(x+this->sx, y+this->sy)) {
                 uint16_t color2 = this->buff->readPixel(x+this->sx, y+this->sy);
@@ -1415,7 +1415,7 @@ POSSIBILITY OF SUCH DAMAGE.
         float ab = 0;
         float ac = 0;
         float t = abs((v2x-v1x) * (v3y-v1y) - (v2y-v1y) * (v3x-v1x));
-        for (int16_t x = sx; x < ex; ++x) {
+        for (int16_t x = sx; x <= ex; ++x) {
             if (!this->inSide2(x, y)) { continue; }
             
             if (t > 0) {
@@ -1466,7 +1466,7 @@ POSSIBILITY OF SUCH DAMAGE.
         float ab = 0;
         float ac = 0;
         float t = abs((v2x-v1x) * (v3y-v1y) - (v2y-v1y) * (v3x-v1x));
-        for (int16_t x = sx; x < ex; ++x) {
+        for (int16_t x = sx; x <= ex; ++x) {
             if (!this->inSide2(x, y)) { continue; }
             
             if (t > 0) {
@@ -1858,7 +1858,8 @@ public:
     TFT_eSprite* tft_es_buff;
     TFT_eSprite* zbuff;
     
-    uint16_t fixed_milli_time = 33;
+    // uint16_t fixed_milli_time = 33;
+    float fixed_milli_time = 33.333f;
     E512W3DWindowManager () {}
     
     void begin () {
@@ -1918,7 +1919,8 @@ public:
     }
     void clear (uint16_t color = 0) {
         this->over_time = (millis() - this->prev_time) - (this->fixed_milli_time - this->over_time);
-        this->over_time = min(this->over_time, this->fixed_milli_time);
+        //this->over_time = min(this->over_time, this->fixed_milli_time);
+        this->over_time = min((float)this->over_time, this->fixed_milli_time);
         this->prev_time = millis();
         this->colorBufferClear(color);
     }

@@ -1,15 +1,119 @@
-﻿#pragma once
+#pragma once
 
 #include "E512W3DUtils.hpp"
 #include "E512W3DWindow.hpp"
 E512W3DWindowManager e512w3d;
 
 
-
-#if !(defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_PLUS) || defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_FIRE) || defined(ARDUINO_M5STACK_Core2) || defined(ARDUINO_ARCH_RP2040))
+#if !(defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_PLUS) || defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_FIRE) || defined(ARDUINO_M5STACK_Core2) || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_RP2350))
     void setup();
     void loop();
 #endif
+
+
+#if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_RP2350)
+    inline void delay1 () { delay(1); }
+#else
+    inline void delay1 () { usleep(10); }
+#endif
+
+E512W3DWindow* rendertargetwindow;
+Object3D* rendertargetobject;
+bool rendertargetchild = false;
+bool render1 = false;
+bool isrunning = true;
+
+void loop1 () {
+    if (render1 && rendertargetwindow != NULL) {
+        if (rendertargetobject == NULL) {
+            for (auto&& i : rendertargetwindow->child) { rendertargetwindow->drawmt(*i, 1, 2, rendertargetchild); }
+        } else {
+            rendertargetwindow->drawmt(*rendertargetobject, 1, 2, rendertargetchild);
+        }
+        render1 = false;
+    }
+}
+
+#if defined(_WIN32)
+    #include <thread>
+    bool rnf0 = false;
+    void threadLoop0 () {
+        while (isrunning) {
+            if (rnf0) {
+                loop();
+                rnf0 = false;
+            }
+            delay1();
+        }
+    }
+
+    bool rnf1 = false;
+    void threadLoop1 () {
+        while (isrunning) {
+            if (rnf1) {
+                loop1();
+                rnf1 = false;
+            }
+            delay1();
+        }
+    }
+#endif
+
+#if defined(ARDUINO_M5Stick_C)
+    bool multicorebegin = true;
+    bool rnf1 = false;
+    void threadLoop1 (void* param) {
+        while (isrunning) {
+            loop1();
+            delay1();
+        }
+    }
+    void multiCoreDraw (E512W3DWindow& w) {
+        if (multicorebegin) {
+            xTaskCreatePinnedToCore(threadLoop1, "Core0", 4096, NULL, 1, NULL, 0);
+            multicorebegin = false;
+        }
+        rendertargetwindow = &w;
+        rendertargetobject = NULL;
+        rendertargetchild = true;
+        w.begin();
+        render1 = true;
+        for (auto&& i : w.child) { w.drawmt(*i, 0, 2, rendertargetchild); }
+        while (render1 && isrunning) { delay1(); }
+    }
+    void multiCoreDraw (E512W3DWindow& w, Object3D& o, bool child = false) {
+        if (multicorebegin) {
+            xTaskCreatePinnedToCore(threadLoop1, "Core0", 4096, NULL, 1, NULL, 0);
+            multicorebegin = false;
+        }
+        rendertargetwindow = &w;
+        rendertargetobject = &o;
+        rendertargetchild = child;
+        render1 = true;
+        w.drawmt(o, 0, 2, child);
+        while (render1 && isrunning) { delay1(); }
+    }
+#else
+    void multiCoreDraw (E512W3DWindow& w) {
+        rendertargetwindow = &w;
+        rendertargetobject = NULL;
+        rendertargetchild = true;
+        w.begin();
+        render1 = true;
+        for (auto&& i : w.child) { w.drawmt(*i, 0, 2, rendertargetchild); }
+        while (render1 && isrunning) { delay1(); }
+    }
+    void multiCoreDraw (E512W3DWindow& w, Object3D& o, bool child = false) {
+        rendertargetwindow = &w;
+        rendertargetobject = &o;
+        rendertargetchild = child;
+        render1 = true;
+        w.drawmt(o, 0, 2, child);
+        while (render1 && isrunning) { delay1(); }
+    }
+#endif
+
+
 
 
 #if defined(_WIN32)
@@ -79,6 +183,9 @@ E512W3DWindowManager e512w3d;
         if (hwnd == NULL) { return 0; }
         M5.window_app(hwnd, e512w3d.width, e512w3d.height);
         POINT pos;
+        
+        std::thread th0(threadLoop0);
+        std::thread th1(threadLoop1);
         while (true) {
             GetCursorPos(&pos);
             ScreenToClient(hwnd, &pos);
@@ -93,10 +200,14 @@ E512W3DWindowManager e512w3d;
                 if(msg.message == WM_QUIT) { break; }
                 DispatchMessage(&msg);
             } else {
-                loop();
-                usleep(100);
+                rnf0 = true;
+                rnf1 = true;
+                delay1();
             }
         }
+        isrunning = false;
+        th0.join();
+        th1.join();
         return msg.wParam;
     }
 #elif defined(__EMSCRIPTEN__)
@@ -201,273 +312,7 @@ E512W3DWindowManager e512w3d;
         }
         return 0;
     }
-#elif defined(__ANDROID_API__)
-    /*
-    Copyright (C) 2010 The Android オープンソース プロジェクト
-    
-    Apache License Version 2.0 (「本ライセンス」) に基づいてライセンスされます。;
-    本ライセンスに準拠しない場合はこのファイルを使用できません。
-    本ライセンスのコピーは、以下の場所から入手できます。
-    
-        http://www.apache.org/licenses/LICENSE-2.0
-    
-    適用される法令または書面での同意によって命じられない限り、本ライセンスに基づいて頒布されるソフトウェアは、
-    明示黙示を問わず、いかなる保証も条件もなしに現状のまま
-    頒布されます。
-    本ライセンスでの権利と制限を規定した文言ついては、
-    本ライセンスを参照してください。
-    */
-    /* android native-activity template modification */
-    #include <malloc.h>
-
-    struct saved_state { float angle; int32_t x; int32_t y; };
-
-    struct engine {
-        struct android_app* app;
-        ASensorManager* sensorManager;
-        const ASensor* accelerometerSensor;
-        ASensorEventQueue* sensorEventQueue;
-        int animating;
-        EGLDisplay display;
-        EGLSurface surface;
-        EGLContext context;
-        int32_t width;
-        int32_t height;
-        struct saved_state state;
-    };
-
-    static int engine_init_display(struct engine* engine) {
-        const EGLint attribs[] = {
-            EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-            EGL_BLUE_SIZE, 8,
-            EGL_GREEN_SIZE, 8,
-            EGL_RED_SIZE, 8,
-            EGL_NONE
-        };
-        EGLint w, h, format;
-        EGLint numConfigs;
-        EGLConfig config;
-        EGLSurface surface;
-        EGLContext context;
-
-        EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-        eglInitialize(display, 0, 0);
-        
-        eglChooseConfig(display, attribs, &config, 1, &numConfigs);
-        
-        eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &format);
-
-        ANativeWindow_setBuffersGeometry(engine->app->window, 0, 0, format);
-        
-        surface = eglCreateWindowSurface(display, config, engine->app->window, NULL);
-        context = eglCreateContext(display, config, NULL, NULL);
-        
-        if (eglMakeCurrent(display, surface, surface, context) == EGL_FALSE) { return -1; }
-        
-        eglQuerySurface(display, surface, EGL_WIDTH, &w);
-        eglQuerySurface(display, surface, EGL_HEIGHT, &h);
-        
-        engine->display = display;
-        engine->context = context;
-        engine->surface = surface;
-        engine->width = w;
-        engine->height = h;
-        engine->state.angle = 0;
-        
-        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
-        glEnable(GL_CULL_FACE);
-        glShadeModel(GL_SMOOTH);
-        glDisable(GL_DEPTH_TEST);
-        
-        return 0;
-    }
-
-
-    uint32_t android_texture_id = 0;
-    static void androidDrawTexture (engine* engine) {
-        if (android_texture_id < 1) { glGenTextures(1, &android_texture_id); }
-        if (android_texture_id < 1) { return; }
-        
-        if (e512w3d.width * e512w3d.height < 1) { return; }
-        if (engine->width * engine->height < 1) { return; }
-        
-        // if (M5.textureSize() < e512w3d.width*e512w3d.height) { M5.resize(e512w3d.width, e512w3d.height); }
-        
-        glEnable(GL_TEXTURE_2D);
-        
-        glBindTexture(GL_TEXTURE_2D, android_texture_id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, M5.tw, M5.th, 0, GL_RGB, GL_UNSIGNED_BYTE, M5.pixels);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 3);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-        
-        // glEnable(GL_BLEND);
-        // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glBindTexture(GL_TEXTURE_2D, android_texture_id);
-        
-        float l = 0.0f;
-        float u = 0.0f;
-        float r = (float)e512w3d.width / (float)M5.tw;
-        float d = (float)e512w3d.height / (float)M5.th;
-        float uv[8] = {l, d, r, d, l, u, r, u};
-        glTexCoordPointer(2, GL_FLOAT, 0, uv);
-        
-        float awh = (float)e512w3d.width / (float)e512w3d.height;
-        float bwh = (float)engine->width / (float)engine->height;
-        
-        const bool vf = awh / bwh <= 1.0f;
-        float vx = vf ? awh / bwh : 1.0f;
-        float vy = vf ? 1.0f : bwh / awh;
-        
-        GLfloat vs[12] = {-vx, -vy, 0.0f, vx, -vy, 0.0f, -vx, vy, 0.0f, vx, vy, 0.0f};
-        glVertexPointer(3, GL_FLOAT, 0, vs);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glDisableClientState(GL_VERTEX_ARRAY);
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-        // glDisable(GL_BLEND);
-    }
-
-    static void engine_draw_frame(struct engine* engine) {
-        static float r = 200.0f / 255.0f;
-        static float g =  43.0f / 255.0f;
-        static float b =  85.0f / 255.0f;
-        if (engine->display == NULL) { return; }
-        glClearColor(r, g, b, 1);
-        glClear(GL_COLOR_BUFFER_BIT);
-        androidDrawTexture(engine);
-        eglSwapBuffers(engine->display, engine->surface);
-    }
-
-    static void engine_term_display(struct engine* engine) {
-        if (engine->display != EGL_NO_DISPLAY) {
-            eglMakeCurrent(engine->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-            if (engine->context != EGL_NO_CONTEXT) {
-                eglDestroyContext(engine->display, engine->context);
-            }
-            if (engine->surface != EGL_NO_SURFACE) {
-                eglDestroySurface(engine->display, engine->surface);
-            }
-            eglTerminate(engine->display);
-        }
-        engine->animating = 0;
-        engine->display = EGL_NO_DISPLAY;
-        engine->context = EGL_NO_CONTEXT;
-        engine->surface = EGL_NO_SURFACE;
-    }
-
-    static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) {
-        struct engine* engine = (struct engine*)app->userData;
-        if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION) {
-            engine->state.x = AMotionEvent_getX(event, 0);
-            engine->state.y = AMotionEvent_getY(event, 0);
-            
-            if (e512w3d.width * e512w3d.height < 1) { return 1; }
-            if (engine->width * engine->height < 1) { return 1; }
-            float ax = (float)engine->state.x / (float)engine->width;
-            float ay = (float)engine->state.y / (float)engine->height;
-            float awh = (float)e512w3d.width / (float)e512w3d.height;
-            float bwh = (float)engine->width / (float)engine->height;
-            
-            const bool vf = awh / bwh <= 1.0f;
-            float w = vf ? awh / bwh : 1.0f;
-            float h = vf ? 1.0f : bwh / awh;
-            
-            cursor_x = (((ax-0.5f) / w) + 0.5f) * (float)e512w3d.width ;
-            cursor_y = (((ay-0.5f) / h) + 0.5f) * (float)e512w3d.height;
-            
-            cursor_l = !(AMotionEvent_getAction(event) & AMOTION_EVENT_ACTION_BUTTON_RELEASE > 0);
-            return 1;
-        }
-        return 0;
-    }
-
-    static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
-        struct engine* engine = (struct engine*)app->userData;
-        switch (cmd) {
-        case APP_CMD_SAVE_STATE:
-            engine->app->savedState = malloc(sizeof(struct saved_state));
-            *((struct saved_state*)engine->app->savedState) = engine->state;
-            engine->app->savedStateSize = sizeof(struct saved_state);
-            break;
-        case APP_CMD_INIT_WINDOW:
-            if (engine->app->window != NULL) {
-                engine_init_display(engine);
-                engine_draw_frame(engine);
-            }
-            break;
-        case APP_CMD_TERM_WINDOW:
-            engine_term_display(engine);
-            break;
-        case APP_CMD_GAINED_FOCUS:
-            if (engine->accelerometerSensor != NULL) {
-                ASensorEventQueue_enableSensor(engine->sensorEventQueue, engine->accelerometerSensor);
-                ASensorEventQueue_setEventRate(engine->sensorEventQueue, engine->accelerometerSensor, (1000L / 60) * 1000);
-            }
-            engine->animating = 1;
-            break;
-        case APP_CMD_LOST_FOCUS:
-            if (engine->accelerometerSensor != NULL) {
-                ASensorEventQueue_disableSensor(engine->sensorEventQueue, engine->accelerometerSensor);
-            }
-            engine->animating = 0;
-            engine_draw_frame(engine);
-            break;
-        }
-    }
-
-    void android_main(struct android_app* state) {
-        struct engine engine;
-        
-        memset(&engine, 0, sizeof(engine));
-        state->userData = &engine;
-        state->onAppCmd = engine_handle_cmd;
-        state->onInputEvent = engine_handle_input;
-        engine.app = state;
-        
-        engine.sensorManager = ASensorManager_getInstance();
-        engine.accelerometerSensor = ASensorManager_getDefaultSensor(engine.sensorManager, ASENSOR_TYPE_ACCELEROMETER);
-        engine.sensorEventQueue = ASensorManager_createEventQueue(engine.sensorManager, state->looper, LOOPER_ID_USER, NULL, NULL);
-
-        if (state->savedState != NULL) { engine.state = *(struct saved_state*)state->savedState; }
-        engine.animating = 1;
-
-        setup();
-        
-        while (1) {
-            int ident, events;
-            struct android_poll_source* source;
-            while ((ident = ALooper_pollAll(engine.animating ? 0 : -1, NULL, &events, (void**)&source)) >= 0) {
-                if (source != NULL) { source->process(state, source); }
-                
-                if (ident == LOOPER_ID_USER) {
-                    if (engine.accelerometerSensor != NULL) {
-                        ASensorEvent event;
-                        while (ASensorEventQueue_getEvents(engine.sensorEventQueue, &event, 1) > 0) {}
-                    }
-                }
-                
-                if (state->destroyRequested != 0) {
-                    engine_term_display(&engine);
-                    return;
-                }
-            }
-            loop();
-            if (engine.animating) {
-                engine.state.angle += 0.01f;
-                if (engine.state.angle > 1) { engine.state.angle = 0; }
-                engine_draw_frame(&engine);
-            }
-        }
-    }
-    /* android native-activity template modification */
-#elif !(defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_PLUS) || defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_FIRE) || defined(ARDUINO_M5STACK_Core2) || defined(ARDUINO_ARCH_RP2040))
+#elif !(defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_PLUS) || defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_FIRE) || defined(ARDUINO_M5STACK_Core2) || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_RP2350))
     #if __has_include(<curses.h>) && defined(USENCURSES)
         #include <csignal>
         bool floop = true;
@@ -523,15 +368,6 @@ E512W3DWindowManager e512w3d;
         }
     #endif
 #endif
-
-
-
-
-
-
-
-
-
 
 
 
